@@ -5,7 +5,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::{Cursor, Read, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 use std::str::from_utf8;
 
 use byteorder::{BigEndian, ByteOrder, ReadBytesExt, WriteBytesExt};
@@ -199,7 +199,7 @@ pub fn read_bytecode<R: Read>(r: &mut R, path: &Path, ctx: &Context)
 
     for _ in 0..n_macros {
         let name = dec.read_name(&names)?;
-        let code = Rc::new(dec.read_code(&names)?);
+        let code = Arc::new(dec.read_code(&names)?);
         macros.push((name, code));
     }
 
@@ -233,7 +233,7 @@ pub fn read_bytecode<R: Read>(r: &mut R, path: &Path, ctx: &Context)
     let mut exprs = Vec::new();
 
     while !dec.is_empty() {
-        exprs.push(Rc::new(dec.read_code(&names)?));
+        exprs.push(Arc::new(dec.read_code(&names)?));
     }
 
     Ok(ModuleCode{
@@ -447,7 +447,7 @@ impl<'a, 'data> ValueDecoder<'a, 'data> {
 
                 let def = StructValueDef::new(fields.into_slice());
 
-                Ok(Value::StructDef(Rc::new(StructDef::new(name, Box::new(def)))))
+                Ok(Value::StructDef(Arc::new(StructDef::new(name, Box::new(def)))))
             }
             QUASI_QUOTE => {
                 let n = u32::from(self.read_u8()?);
@@ -486,7 +486,7 @@ impl<'a, 'data> ValueDecoder<'a, 'data> {
             }
             LAMBDA => {
                 let code = self.read_code(names)?;
-                Ok(Value::Lambda(Lambda::new(Rc::new(code), self.ctx.scope())))
+                Ok(Value::Lambda(Lambda::new(Arc::new(code), self.ctx.scope())))
             }
             _ => Err(DecodeError::InvalidType(ty))
         }

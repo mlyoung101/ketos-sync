@@ -3,6 +3,7 @@
 use std::any::TypeId;
 use std::cell::{Ref, RefMut, RefCell};
 use std::rc::{Rc, Weak};
+use std::sync::Arc;
 
 use crate::function::{Function, Lambda};
 use crate::io::GlobalIo;
@@ -18,11 +19,11 @@ use crate::value::Value;
 pub struct GlobalScope {
     name: Name,
     namespace: RefCell<Namespace>,
-    name_store: Rc<RefCell<NameStore>>,
-    codemap: Rc<RefCell<CodeMap>>,
-    modules: Rc<ModuleRegistry>,
-    io: Rc<GlobalIo>,
-    struct_defs: Rc<RefCell<StructDefMap>>,
+    name_store: Arc<RefCell<NameStore>>,
+    codemap: Arc<RefCell<CodeMap>>,
+    modules: Arc<ModuleRegistry>,
+    io: Arc<GlobalIo>,
+    struct_defs: Arc<RefCell<StructDefMap>>,
 }
 
 #[derive(Clone)]
@@ -66,7 +67,7 @@ impl ImportSet {
 }
 
 /// Shared scope object
-pub type Scope = Rc<GlobalScope>;
+pub type Scope = Arc<GlobalScope>;
 
 /// Weak reference to shared scope object
 pub type WeakScope = Weak<GlobalScope>;
@@ -74,11 +75,11 @@ pub type WeakScope = Weak<GlobalScope>;
 impl GlobalScope {
     /// Creates a new global scope.
     pub fn new(name: Name,
-            names: Rc<RefCell<NameStore>>,
-            codemap: Rc<RefCell<CodeMap>>,
-            registry: Rc<ModuleRegistry>,
-            io: Rc<GlobalIo>,
-            struct_defs: Rc<RefCell<StructDefMap>>) -> GlobalScope {
+            names: Arc<RefCell<NameStore>>,
+            codemap: Arc<RefCell<CodeMap>>,
+            registry: Arc<ModuleRegistry>,
+            io: Arc<GlobalIo>,
+            struct_defs: Arc<RefCell<StructDefMap>>) -> GlobalScope {
         GlobalScope{
             name,
             namespace: RefCell::new(Namespace::new()),
@@ -95,18 +96,18 @@ impl GlobalScope {
         let mut names = NameStore::new();
         let name = names.add(name);
 
-        let names = Rc::new(RefCell::new(names));
-        let codemap = Rc::new(RefCell::new(CodeMap::new()));
-        let modules = Rc::new(ModuleRegistry::new(Box::new(BuiltinModuleLoader)));
-        let io = Rc::new(GlobalIo::default());
-        let struct_defs = Rc::new(RefCell::new(StructDefMap::new()));
+        let names = Arc::new(RefCell::new(names));
+        let codemap = Arc::new(RefCell::new(CodeMap::new()));
+        let modules = Arc::new(ModuleRegistry::new(Box::new(BuiltinModuleLoader)));
+        let io = Arc::new(GlobalIo::default());
+        let struct_defs = Arc::new(RefCell::new(StructDefMap::new()));
 
         GlobalScope::new(name, names, codemap, modules, io, struct_defs)
     }
 
     /// Creates a new global scope using the shared data from the given scope.
     pub fn new_using(name: Name, scope: &Scope) -> Scope {
-        Rc::new(GlobalScope::new(
+        Arc::new(GlobalScope::new(
             name,
             scope.name_store.clone(),
             scope.codemap.clone(),
@@ -121,7 +122,7 @@ impl GlobalScope {
     ///
     /// Other data will be shared between this scope and the new scope.
     pub fn clone_scope(&self) -> Scope {
-        Rc::new(GlobalScope{
+        Arc::new(GlobalScope{
             name: self.name,
             namespace: self.namespace.clone(),
             name_store: self.name_store.clone(),
@@ -212,7 +213,7 @@ impl GlobalScope {
     }
 
     /// Returns a borrowed reference to the contained `CodeMap`.
-    pub fn codemap(&self) -> &Rc<RefCell<CodeMap>> {
+    pub fn codemap(&self) -> &Arc<RefCell<CodeMap>> {
         &self.codemap
     }
 
@@ -228,7 +229,7 @@ impl GlobalScope {
     }
 
     /// Returns a `StructDef` for a given type.
-    pub fn get_struct_def(&self, id: TypeId) -> Option<Rc<StructDef>> {
+    pub fn get_struct_def(&self, id: TypeId) -> Option<Arc<StructDef>> {
         self.struct_defs.borrow().get(&id).cloned()
     }
 
@@ -237,24 +238,24 @@ impl GlobalScope {
     pub fn register_struct_value<T: StructValue>(&self) {
         let name = self.add_name(T::struct_name());
 
-        let def = Rc::new(StructDef::new(name,
+        let def = Arc::new(StructDef::new(name,
             Box::new(ForeignStructDef::<T>::new(&mut self.name_store.borrow_mut()))));
 
         self.insert_struct_def(TypeId::of::<T>(), def.clone());
         self.add_value(name, Value::StructDef(def));
     }
 
-    fn insert_struct_def(&self, id: TypeId, def: Rc<StructDef>) {
+    fn insert_struct_def(&self, id: TypeId, def: Arc<StructDef>) {
         self.struct_defs.borrow_mut().insert(id, def);
     }
 
     /// Returns a borrowed reference to the contained `GlobalIo`.
-    pub fn io(&self) -> &Rc<GlobalIo> {
+    pub fn io(&self) -> &Arc<GlobalIo> {
         &self.io
     }
 
     /// Returns a borrowed reference to the contained `ModuleRegistry`.
-    pub fn modules(&self) -> &Rc<ModuleRegistry> {
+    pub fn modules(&self) -> &Arc<ModuleRegistry> {
         &self.modules
     }
 
@@ -264,7 +265,7 @@ impl GlobalScope {
     }
 
     /// Returns a borrowed reference to the contained `NameStore`.
-    pub fn names(&self) -> &Rc<RefCell<NameStore>> {
+    pub fn names(&self) -> &Arc<RefCell<NameStore>> {
         &self.name_store
     }
 

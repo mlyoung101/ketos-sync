@@ -33,8 +33,8 @@ macro_rules! impl_any_cast {
 
             /// Returns an owned `Rc` reference to the contained value,
             /// if it is of the given type.
-            pub fn downcast_rc<T: $ty>(rc: ::std::rc::Rc<Self>)
-                    -> Result<::std::rc::Rc<T>, ::std::rc::Rc<Self>> {
+            pub fn downcast_rc<T: $ty>(rc: ::std::sync::Arc<Self>)
+                    -> Result<::std::sync::Arc<T>, ::std::sync::Arc<Self>> {
                 if rc.is::<T>() {
                     unsafe {
                         let obj: $crate::any::TraitObject = ::std::mem::transmute(rc);
@@ -77,7 +77,7 @@ macro_rules! impl_any_cast {
 mod test {
     use std::any::Any;
     use std::fmt;
-    use std::rc::Rc;
+use std::sync::Arc;
 
     trait SomeTrait: Any + fmt::Debug {}
 
@@ -107,7 +107,7 @@ mod test {
 
     #[test]
     fn test_downcast_rc() {
-        let a: Rc<dyn SomeTrait> = Rc::new(Dummy{a: 0});
+        let a: Arc<dyn SomeTrait> = Arc::new(Dummy{a: 0});
 
         let b = SomeTrait::downcast_rc::<Dumber>(a).unwrap_err();
         let c = SomeTrait::downcast_rc::<Dummy>(b).unwrap();

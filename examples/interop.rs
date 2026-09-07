@@ -4,7 +4,7 @@
 #[macro_use] extern crate ketos_derive;
 
 use std::cell::Cell;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use ketos::{Error, Interpreter, Value};
 
@@ -64,10 +64,10 @@ fn main() {
     let interp = Interpreter::new();
 
     // Create a shared `Hello` value.
-    let hello = Rc::new(Hello::new("world".into()));
+    let hello = Arc::new(Hello::new("world".into()));
 
     // Create a shared `Counter` value.
-    let counter = Rc::new(Counter::new());
+    let counter = Arc::new(Counter::new());
 
     // Inserts wrapper functions into the global scope.
     ketos_fn!{ interp.scope() => "count" =>

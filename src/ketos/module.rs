@@ -4,7 +4,8 @@ use std::cell::RefCell;
 use std::fs::{File, Metadata};
 use std::io::{stderr, Read, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Arc;
 
 use crate::bytecode::Code;
 use crate::compile::{compile, CompileError};
@@ -122,7 +123,7 @@ impl ModuleBuilder {
 #[derive(Clone, Default)]
 pub struct ModuleCode {
     /// Decoded `Code` objects
-    pub code: Vec<Rc<Code>>,
+    pub code: Vec<Arc<Code>>,
     /// Exported names
     pub exports: NameSetSlice,
     /// Imported names
@@ -130,7 +131,7 @@ pub struct ModuleCode {
     /// Decoded constant values
     pub constants: Vec<(Name, Value)>,
     /// Decoded macro objects
-    pub macros: Vec<(Name, Rc<Code>)>,
+    pub macros: Vec<(Name, Arc<Code>)>,
     /// Global values generated at compile time
     pub values: Vec<(Name, Value)>,
     /// Module doc strings
@@ -143,7 +144,7 @@ impl ModuleCode {
     /// Creates a `ModuleCode` from a series of code objects and a `Scope`.
     ///
     /// Trivial code objects will be removed.
-    pub fn new(mut code: Vec<Rc<Code>>, scope: &Scope) -> ModuleCode {
+    pub fn new(mut code: Vec<Arc<Code>>, scope: &Scope) -> ModuleCode {
         fn is_lambda(v: &Value) -> bool {
             match *v {
                 Value::Lambda(_) => true,
@@ -536,7 +537,7 @@ fn load_module_from_file(ctx: Context, name: Name,
     };
 
     let code = exprs.iter()
-        .map(|e| compile(&ctx, e).map(Rc::new)).collect::<Result<Vec<_>, _>>()?;
+        .map(|e| compile(&ctx, e).map(Arc::new)).collect::<Result<Vec<_>, _>>()?;
 
     if let Some(code_path) = code_path {
         // Grab compile-time values before executing code

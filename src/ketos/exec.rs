@@ -27,7 +27,8 @@ use std::cell::Cell;
 use std::error::Error as StdError;
 use std::fmt;
 use std::mem::replace;
-use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Arc;
 use std::time::Instant;
 use std::vec::Drain;
 
@@ -409,7 +410,7 @@ impl NameDisplay for ExecError {
 }
 
 /// Executes a code object and returns the value.
-pub fn execute(ctx: &Context, code: Rc<Code>) -> Result<Value, Error> {
+pub fn execute(ctx: &Context, code: Arc<Code>) -> Result<Value, Error> {
     let mut mach = Machine::new(ctx);
 
     mach.execute(ctx.scope(), code)
@@ -453,12 +454,12 @@ pub fn execute_lambda(ctx: &Context, lambda: Lambda, args: Vec<Value>) -> Result
 
 struct StackFrame {
     /// Code object
-    code: Rc<Code>,
+    code: Arc<Code>,
     /// Code scope
     scope: Scope,
     /// Closure values
-    // TODO: When Rc<[T]> is possible for non-static [T], change this.
-    values: Option<Rc<Box<[Value]>>>,
+    // TODO: When Arc<[T]> is possible for non-static [T], change this.
+    values: Option<Arc<Box<[Value]>>>,
     /// Instruction pointer
     iptr: u32,
     /// Stack pointer
@@ -507,7 +508,7 @@ impl Machine {
         Trace::new(trace, None)
     }
 
-    fn execute(&mut self, scope: &Scope, code: Rc<Code>) -> Result<Value, Error> {
+    fn execute(&mut self, scope: &Scope, code: Arc<Code>) -> Result<Value, Error> {
         let arity = code.arity();
 
         if arity != Arity::Exact(0) {

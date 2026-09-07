@@ -6,8 +6,9 @@ use std::ffi::OsStr;
 use std::fmt;
 use std::ops;
 use std::path::Path;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::slice::Iter;
+use std::sync::Arc;
 
 // A duplicate of `collections::range::RangeArgument`, which is unstable.
 /// Argument for functions accepting a range
@@ -34,7 +35,7 @@ impl<T> RangeArgument<T> for ops::RangeTo<T> {
 /// Subslices may be created which will share the underlying data buffer.
 #[derive(Clone)]
 pub struct RcString {
-    data: Rc<String>,
+    data: Arc<String>,
     start: usize,
     end: usize,
 }
@@ -45,7 +46,7 @@ impl RcString {
         let n = data.len();
 
         RcString{
-            data: Rc::new(data),
+            data: Arc::new(data),
             start: 0,
             end: n,
         }
@@ -93,7 +94,7 @@ impl RcString {
 
     /// Consumes the `RcString` and returns a `String`.
     pub fn into_string(self) -> String {
-        match Rc::try_unwrap(self.data) {
+        match Arc::try_unwrap(self.data) {
             Ok(mut s) => {
                 let _ = s.drain(self.end..);
                 let _ = s.drain(..self.start);
@@ -116,7 +117,7 @@ impl RcString {
     }
 
     fn make_mut(&mut self) -> &mut String {
-        let s = Rc::make_mut(&mut self.data);
+        let s = Arc::make_mut(&mut self.data);
 
         let _ = s.drain(self.end..);
         let _ = s.drain(..self.start);
@@ -224,7 +225,7 @@ impl From<String> for RcString {
 /// Subslices may be created which will share the underlying data buffer.
 #[derive(Clone)]
 pub struct RcVec<T> {
-    data: Rc<Vec<T>>,
+    data: Arc<Vec<T>>,
     start: usize,
     end: usize,
 }
@@ -235,7 +236,7 @@ impl<T> RcVec<T> {
         let n = data.len();
 
         RcVec{
-            data: Rc::new(data),
+            data: Arc::new(data),
             start: 0,
             end: n,
         }
@@ -282,7 +283,7 @@ impl<T: Clone> RcVec<T> {
     /// Consumes the `RcVec` and returns the contained `Vec`.
     /// This will clone the contained values unless the data was uniquely held.
     pub fn into_vec(self) -> Vec<T> {
-        match Rc::try_unwrap(self.data) {
+        match Arc::try_unwrap(self.data) {
             Ok(mut v) => {
                 let _ = v.drain(self.end..);
                 let _ = v.drain(..self.start);
@@ -300,7 +301,7 @@ impl<T: Clone> RcVec<T> {
     /// If the length of the `Vec` is modified, the `end` field of `RcVec`
     /// must be adjusted manually. That's why this method is private.
     fn make_mut(&mut self) -> &mut Vec<T> {
-        let v = Rc::make_mut(&mut self.data);
+        let v = Arc::make_mut(&mut self.data);
 
         let _ = v.drain(self.end..);
         let _ = v.drain(..self.start);

@@ -160,7 +160,7 @@ fn gen_from_value(input: TokenStream) -> Result<TokenStream2, Error> {
                     ::ketos::Value::Foreign(fv) => {
                         match ::ketos::ForeignValue::downcast_rc(fv) {
                             ::std::result::Result::Ok(v) => {
-                                match ::std::rc::Rc::try_unwrap(v) {
+                                match ::std::sync::Arc::try_unwrap(v) {
                                     ::std::result::Result::Ok(v) => ::std::result::Result::Ok(v),
                                     ::std::result::Result::Err(_) => ::std::result::Result::Err(
                                         ::ketos::panic(concat!(#name_str, " value is not unique")))
@@ -195,7 +195,7 @@ fn gen_from_value_clone(input: TokenStream) -> Result<TokenStream2, Error> {
                     ::ketos::Value::Foreign(fv) => {
                         match ::ketos::ForeignValue::downcast_rc(fv) {
                             ::std::result::Result::Ok(v) => {
-                                match ::std::rc::Rc::try_unwrap(v) {
+                                match ::std::sync::Arc::try_unwrap(v) {
                                     ::std::result::Result::Ok(v) => ::std::result::Result::Ok(v),
                                     ::std::result::Result::Err(rc) => ::std::result::Result::Ok((*rc).clone())
                                 }
@@ -306,7 +306,7 @@ fn gen_struct_value(input: TokenStream) -> Result<TokenStream2, Error> {
             }
 
             fn from_fields(scope: &::ketos::Scope,
-                    def: &::std::rc::Rc<::ketos::StructDef>,
+                    def: &::std::sync::Arc<::ketos::StructDef>,
                     fields: &mut [(::ketos::Name, ::ketos::Value)])
                     -> ::std::result::Result<Self, ::ketos::Error> {
                 #( let mut #local = None; )*
@@ -345,7 +345,7 @@ fn gen_struct_value(input: TokenStream) -> Result<TokenStream2, Error> {
             }
 
             fn get_field(&self, scope: &::ketos::Scope,
-                    def: &::std::rc::Rc<::ketos::StructDef>,
+                    def: &::std::sync::Arc<::ketos::StructDef>,
                     name: ::ketos::Name)
                     -> ::std::result::Result<::ketos::Value, ::ketos::Error> {
                 scope.with_name(name, |name_str| {
@@ -361,7 +361,7 @@ fn gen_struct_value(input: TokenStream) -> Result<TokenStream2, Error> {
             }
 
             fn replace_fields(&mut self, scope: &::ketos::Scope,
-                    def: &::std::rc::Rc<::ketos::StructDef>,
+                    def: &::std::sync::Arc<::ketos::StructDef>,
                     fields: &mut [(::ketos::Name, ::ketos::Value)])
                     -> ::std::result::Result<(), ::ketos::Error> {
                 for (name, value) in fields {

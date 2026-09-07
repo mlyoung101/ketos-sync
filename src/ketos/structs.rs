@@ -4,7 +4,8 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use std::fmt;
 use std::marker::PhantomData;
-use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Arc;
 
 use crate::error::Error;
 use crate::exec::ExecError;
@@ -28,7 +29,7 @@ pub trait StructValue: Sized + Clone + ForeignValue {
     ///
     /// An error should be returned if any fields are missing, superfluous,
     /// or the wrong type of value.
-    fn from_fields(scope: &Scope, def: &Rc<StructDef>,
+    fn from_fields(scope: &Scope, def: &Arc<StructDef>,
         fields: &mut [(Name, Value)]) -> Result<Self, Error>;
 
     /// Returns a list of field names.
@@ -37,13 +38,13 @@ pub trait StructValue: Sized + Clone + ForeignValue {
     /// Returns a copy of a field as a Ketos `Value`.
     ///
     /// If the named field does not exist, an error should be returned.
-    fn get_field(&self, scope: &Scope, def: &Rc<StructDef>, name: Name) -> Result<Value, Error>;
+    fn get_field(&self, scope: &Scope, def: &Arc<StructDef>, name: Name) -> Result<Value, Error>;
 
     /// Modifies the value to replace named fields with provided values.
     ///
     /// If any names are invalid or any values are of incorrect type,
     /// an error should be returned.
-    fn replace_fields(&mut self, scope: &Scope, def: &Rc<StructDef>,
+    fn replace_fields(&mut self, scope: &Scope, def: &Arc<StructDef>,
         fields: &mut [(Name, Value)]) -> Result<(), Error>;
 }
 
@@ -52,18 +53,18 @@ pub trait StructDefinition: Any {
     /// Returns whether the given value is an instance of the given `StructDef`.
     ///
     /// `def` is the `StructDef` instance for this definition.
-    fn is_instance(&self, value: &Value, def: &Rc<StructDef>) -> bool;
+    fn is_instance(&self, value: &Value, def: &Arc<StructDef>) -> bool;
 
     /// Creates a value of this `struct` type from the given list of fields.
     ///
     /// `def` is the `StructDef` instance for this definition.
-    fn from_fields(&self, scope: &Scope, def: &Rc<StructDef>,
+    fn from_fields(&self, scope: &Scope, def: &Arc<StructDef>,
         fields: &mut [(Name, Value)]) -> Result<Value, Error>;
 
     /// Returns a field from a `struct` value.
     ///
     /// `def` is the `StructDef` instance for this definition.
-    fn get_field(&self, scope: &Scope, def: &Rc<StructDef>,
+    fn get_field(&self, scope: &Scope, def: &Arc<StructDef>,
         value: &Value, field: Name) -> Result<Value, Error>;
 
     /// Returns a list of field names.
@@ -72,7 +73,7 @@ pub trait StructDefinition: Any {
     /// Returns a new `struct` value with a set of fields replaced with given values.
     ///
     /// `def` is the `StructDef` instance for this definition.
-    fn replace_fields(&self, scope: &Scope, def: &Rc<StructDef>,
+    fn replace_fields(&self, scope: &Scope, def: &Arc<StructDef>,
         value: Value, fields: &mut [(Name, Value)]) -> Result<Value, Error>;
 
     /// Returns an estimate of the memory held by this definition.
@@ -110,7 +111,7 @@ impl<T: StructValue> ForeignStructDef<T> {
         }
     }
 
-    fn get_rc(&self, value: Value) -> Rc<T> {
+    fn get_rc(&self, value: Value) -> Arc<T> {
         match value {
             Value::Foreign(fv) => {
                 ForeignValue::downcast_rc::<T>(fv)
@@ -122,19 +123,19 @@ impl<T: StructValue> ForeignStructDef<T> {
 }
 
 impl<T: StructValue> StructDefinition for ForeignStructDef<T> {
-    fn is_instance(&self, value: &Value, _def: &Rc<StructDef>) -> bool {
+    fn is_instance(&self, value: &Value, _def: &Arc<StructDef>) -> bool {
         match *value {
             Value::Foreign(ref fv) => fv.is::<T>(),
             _ => false
         }
     }
 
-    fn from_fields(&self, scope: &Scope, def: &Rc<StructDef>,
+    fn from_fields(&self, scope: &Scope, def: &Arc<StructDef>,
             fields: &mut [(Name, Value)]) -> Result<Value, Error> {
         T::from_fields(scope, def, fields).map(Value::new_foreign)
     }
 
-    fn get_field(&self, scope: &Scope, def: &Rc<StructDef>, value: &Value, field: Name) -> Result<Value, Error> {
+    fn get_field(&self, scope: &Scope, def: &Arc<StructDef>, value: &Value, field: Name) -> Result<Value, Error> {
         let v = self.get(value);
         v.get_field(scope, def, field)
     }
@@ -143,10 +144,10 @@ impl<T: StructValue> StructDefinition for ForeignStructDef<T> {
         self.fields.clone()
     }
 
-    fn replace_fields(&self, scope: &Scope, def: &Rc<StructDef>,
+    fn replace_fields(&self, scope: &Scope, def: &Arc<StructDef>,
             value: Value, fields: &mut [(Name, Value)]) -> Result<Value, Error> {
         let mut v = self.get_rc(value);
-        Rc::make_mut(&mut v).replace_fields(scope, def, fields)?;
+        Arc::make_mut(&mut v).replace_fields(scope, def, fields)?;
         Ok(Value::Foreign(v))
     }
 }
@@ -167,7 +168,7 @@ impl StructValueDef {
         &self.fields
     }
 
-    fn get(&self, name: Name, def: &Rc<StructDef>) -> Result<(usize, Name), ExecError> {
+    fn get(&self, name: Name, def: &Arc<StructDef>) -> Result<(usize, Name), ExecError> {
         self.fields.iter().enumerate()
             .find(|&(_, &(n, _))| n == name)
             .map(|(i, &(_, ty))| (i, ty))
@@ -179,14 +180,14 @@ impl StructValueDef {
 }
 
 impl StructDefinition for StructValueDef {
-    fn is_instance(&self, value: &Value, def: &Rc<StructDef>) -> bool {
+    fn is_instance(&self, value: &Value, def: &Arc<StructDef>) -> bool {
         match *value {
             Value::Struct(ref s) => s.def() == def,
             _ => false
         }
     }
 
-    fn from_fields(&self, scope: &Scope, def: &Rc<StructDef>, fields: &mut [(Name, Value)]) -> Result<Value, Error> {
+    fn from_fields(&self, scope: &Scope, def: &Arc<StructDef>, fields: &mut [(Name, Value)]) -> Result<Value, Error> {
         let mut res = vec![Value::Unbound; self.fields.len()];
 
         for &mut (name, ref mut value) in fields {
@@ -216,10 +217,10 @@ impl StructDefinition for StructValueDef {
             }
         }
 
-        Ok(Value::Struct(Rc::new(Struct::new(def.clone(), res.into_boxed_slice()))))
+        Ok(Value::Struct(Arc::new(Struct::new(def.clone(), res.into_boxed_slice()))))
     }
 
-    fn get_field(&self, _scope: &Scope, def: &Rc<StructDef>,
+    fn get_field(&self, _scope: &Scope, def: &Arc<StructDef>,
             value: &Value, field: Name) -> Result<Value, Error> {
         match *value {
             Value::Struct(ref v) => {
@@ -234,7 +235,7 @@ impl StructDefinition for StructValueDef {
         self.fields.iter().map(|&(name, _)| name).collect()
     }
 
-    fn replace_fields(&self, scope: &Scope, def: &Rc<StructDef>,
+    fn replace_fields(&self, scope: &Scope, def: &Arc<StructDef>,
             value: Value, fields: &mut [(Name, Value)]) -> Result<Value, Error> {
         let mut struc = match value {
             Value::Struct(s) => s,
@@ -242,7 +243,7 @@ impl StructDefinition for StructValueDef {
         };
 
         {
-            let struc_inner = Rc::make_mut(&mut struc);
+            let struc_inner = Arc::make_mut(&mut struc);
             let values = struc_inner.fields_mut();
 
             for &mut (name, ref mut value) in fields {
@@ -274,19 +275,19 @@ impl StructDefinition for StructValueDef {
 #[derive(Clone, Debug)]
 pub struct Struct {
     /// Struct definition
-    def: Rc<StructDef>,
+    def: Arc<StructDef>,
     /// Struct fields
     fields: Box<[Value]>,
 }
 
 impl Struct {
     /// Creates a new `Struct` value with the given `StructDef` and field values.
-    pub fn new(def: Rc<StructDef>, fields: Box<[Value]>) -> Struct {
+    pub fn new(def: Arc<StructDef>, fields: Box<[Value]>) -> Struct {
         Struct{ def, fields }
     }
 
     /// Returns the struct definition.
-    pub fn def(&self) -> &Rc<StructDef> {
+    pub fn def(&self) -> &Arc<StructDef> {
         &self.def
     }
 
@@ -325,8 +326,8 @@ impl PartialEq for StructDef {
     }
 }
 
-/// Mapping of `Rc<StructDef>` by `TypeId`.
-pub type StructDefMap = HashMap<TypeId, Rc<StructDef>>;
+/// Mapping of `Arc<StructDef>` by `TypeId`.
+pub type StructDefMap = HashMap<TypeId, Arc<StructDef>>;
 
 fn ptr_eq<T>(a: *const T, b: *const T) -> bool {
     a == b

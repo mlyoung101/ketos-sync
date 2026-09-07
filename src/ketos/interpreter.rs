@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::fs::File;
 use std::io::{stderr, Read, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::bytecode::Code;
 use crate::compile::compile;
@@ -45,8 +45,8 @@ pub struct Builder {
     context: Option<Context>,
     scope: Option<Scope>,
     restrict: Option<RestrictConfig>,
-    io: Option<Rc<GlobalIo>>,
-    struct_defs: Option<Rc<RefCell<StructDefMap>>>,
+    io: Option<Arc<GlobalIo>>,
+    struct_defs: Option<Arc<RefCell<StructDefMap>>>,
     module_loader: Option<Box<dyn ModuleLoader>>,
     search_paths: Option<Vec<PathBuf>>,
 }
@@ -117,7 +117,7 @@ impl Builder {
     }
 
     /// Sets the struct definitions in the new context.
-    pub fn struct_defs(mut self, defs: Rc<RefCell<StructDefMap>>) -> Self {
+    pub fn struct_defs(mut self, defs: Arc<RefCell<StructDefMap>>) -> Self {
         exclude!(self.context, "struct_defs", "context");
         exclude!(self.scope, "struct_defs", "scope");
 
@@ -126,7 +126,7 @@ impl Builder {
     }
 
     /// Sets the I/O handles in the new scope.
-    pub fn io(mut self, io: Rc<GlobalIo>) -> Self {
+    pub fn io(mut self, io: Arc<GlobalIo>) -> Self {
         exclude!(self.context, "io", "context");
         exclude!(self.scope, "io", "scope");
 
@@ -176,14 +176,14 @@ impl Builder {
         let mut names = NameStore::new();
         let name = names.add(self.name.unwrap_or("main"));
 
-        let names = Rc::new(RefCell::new(names));
-        let codemap = Rc::new(RefCell::new(CodeMap::new()));
-        let modules = Rc::new(ModuleRegistry::new(loader));
-        let io = self.io.take().unwrap_or_else(|| Rc::new(GlobalIo::default()));
+        let names = Arc::new(RefCell::new(names));
+        let codemap = Arc::new(RefCell::new(CodeMap::new()));
+        let modules = Arc::new(ModuleRegistry::new(loader));
+        let io = self.io.take().unwrap_or_else(|| Arc::new(GlobalIo::default()));
         let defs = self.struct_defs.take().unwrap_or_else(
-            || Rc::new(RefCell::new(StructDefMap::new())));
+            || Arc::new(RefCell::new(StructDefMap::new())));
 
-        Rc::new(GlobalScope::new(name, names, codemap, modules, io, defs))
+        Arc::new(GlobalScope::new(name, names, codemap, modules, io, defs))
     }
 
     fn build_loader(&mut self) -> Box<dyn ModuleLoader> {
@@ -221,14 +221,14 @@ impl Interpreter {
         let mut names = NameStore::new();
         let name = names.add("main");
 
-        let names = Rc::new(RefCell::new(names));
-        let codemap = Rc::new(RefCell::new(CodeMap::new()));
-        let modules = Rc::new(ModuleRegistry::new(loader));
-        let io = Rc::new(GlobalIo::default());
-        let defs = Rc::new(RefCell::new(StructDefMap::new()));
+        let names = Arc::new(RefCell::new(names));
+        let codemap = Arc::new(RefCell::new(CodeMap::new()));
+        let modules = Arc::new(ModuleRegistry::new(loader));
+        let io = Arc::new(GlobalIo::default());
+        let defs = Arc::new(RefCell::new(StructDefMap::new()));
 
         Interpreter::with_scope(
-            Rc::new(GlobalScope::new(
+            Arc::new(GlobalScope::new(
                 name,
                 names.clone(),
                 codemap.clone(),
@@ -332,11 +332,11 @@ impl Interpreter {
 
     /// Executes a bare `Code` object taking no parameters.
     pub fn execute(&self, code: Code) -> Result<Value, Error> {
-        self.execute_code(Rc::new(code))
+        self.execute_code(Arc::new(code))
     }
 
-    /// Executes a `Rc<Code>` object taking no parameters.
-    pub fn execute_code(&self, code: Rc<Code>) -> Result<Value, Error> {
+    /// Executes a `Arc<Code>` object taking no parameters.
+    pub fn execute_code(&self, code: Arc<Code>) -> Result<Value, Error> {
         let v = execute(&self.context, code)?;
         Ok(v)
     }

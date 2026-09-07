@@ -5,7 +5,7 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::iter::FromIterator;
 use std::mem::replace;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::slice;
 use std::sync::Arc;
 

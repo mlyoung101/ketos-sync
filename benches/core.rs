@@ -3,19 +3,19 @@
 extern crate ketos;
 extern crate test;
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use test::Bencher;
 
 use ketos::{Code, Error, Interpreter};
 
-fn compile(setup: &str, input: &str) -> Result<(Interpreter, Rc<Code>), Error> {
+fn compile(setup: &str, input: &str) -> Result<(Interpreter, Arc<Code>), Error> {
     let interp = Interpreter::new();
 
     let _ = interp.run_code(setup, None)?;
     let code = interp.compile_single_expr(input, None)?;
 
-    Ok((interp, Rc::new(code)))
+    Ok((interp, Arc::new(code)))
 }
 
 fn run_bench(b: &mut Bencher, setup: &str, input: &str) {

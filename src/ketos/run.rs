@@ -1,6 +1,6 @@
 //! Provides a facility for running code within an existing scope.
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::compile::compile;
 use crate::error::Error;
@@ -26,7 +26,7 @@ pub fn run_code(ctx: &Context, input: &str) -> Result<Value, Error> {
     let mut r = Value::Unit;
 
     for c in code {
-        r = execute(ctx, Rc::new(c))?;
+        r = execute(ctx, Arc::new(c))?;
     }
 
     Ok(r)

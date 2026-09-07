@@ -4,36 +4,36 @@ use std::fmt::{self, Arguments};
 use std::fs;
 use std::io::{self, Stdout, Stderr, Write};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::name::{NameDisplay, NameStore};
 
 /// Contains global shared I/O objects
 pub struct GlobalIo {
     /// Shared standard output writer
-    pub stdout: Rc<dyn SharedWrite>,
+    pub stdout: Arc<dyn SharedWrite>,
 
     /// Shared standard error writer
-    pub stderr: Rc<dyn SharedWrite>,
+    pub stderr: Arc<dyn SharedWrite>,
 }
 
 impl GlobalIo {
     /// Creates a `GlobalIo` instance using the given `stdout` and `stderr`
     /// writers.
-    pub fn new(stdout: Rc<dyn SharedWrite>, stderr: Rc<dyn SharedWrite>) -> GlobalIo {
+    pub fn new(stdout: Arc<dyn SharedWrite>, stderr: Arc<dyn SharedWrite>) -> GlobalIo {
         GlobalIo{ stdout, stderr }
     }
 
     /// Creates a `GlobalIo` instance that ignores all output.
     pub fn null() -> GlobalIo {
-        GlobalIo::new(Rc::new(Sink), Rc::new(Sink))
+        GlobalIo::new(Arc::new(Sink), Arc::new(Sink))
     }
 }
 
 impl Default for GlobalIo {
     /// Creates a `GlobalIo` instance using `stdout`/`stderr` writers.
     fn default() -> GlobalIo {
-        GlobalIo::new(Rc::new(io::stdout()), Rc::new(io::stderr()))
+        GlobalIo::new(Arc::new(io::stdout()), Arc::new(io::stderr()))
     }
 }
 

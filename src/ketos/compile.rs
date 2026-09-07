@@ -3,7 +3,7 @@
 use std::borrow::Cow::{self, Borrowed, Owned};
 use std::fmt;
 use std::mem::replace;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::bytecode::{
     code_flags, Code, CodeBlock,
@@ -1984,7 +1984,7 @@ fn op_struct(compiler: &mut Compiler, args: &[Value]) -> Result<(), Error> {
     }
 
     let def = StructValueDef::new(fields.into_slice());
-    let def = Value::StructDef(Rc::new(StructDef::new(name, Box::new(def))));
+    let def = Value::StructDef(Arc::new(StructDef::new(name, Box::new(def))));
 
     if let Some(doc) = doc {
         compiler.scope().add_doc_string(name, doc.to_owned());
@@ -2664,5 +2664,5 @@ fn make_lambda(compiler: &mut Compiler, name: Option<Name>,
         code.doc = Some(doc.to_owned());
     }
 
-    Ok((Lambda::new(Rc::new(code), compiler.scope()), captures))
+    Ok((Lambda::new(Arc::new(code), compiler.scope()), captures))
 }

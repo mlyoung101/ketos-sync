@@ -2,7 +2,7 @@
 extern crate ketos;
 
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use ketos::{
     BuiltinModuleLoader, FileModuleLoader, ModuleLoader,
@@ -27,7 +27,7 @@ fn run<F>(input: &str, mut f: F) -> Result<(), Error>
     let interp = new_interpreter();
 
     let code: Vec<_> = interp.compile_exprs(input)?
-        .into_iter().map(Rc::new).collect();
+        .into_iter().map(Arc::new).collect();
 
     for code in &code {
         interp.execute_code(code.clone())?;

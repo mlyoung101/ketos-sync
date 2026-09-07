@@ -16,12 +16,12 @@
 //! # Example
 //!
 //! ```
-//! use std::rc::Rc;
+//! use std::sync::Arc;
 //! use ketos::{Builder, GlobalIo, BuiltinModuleLoader, RestrictConfig};
 //!
 //! let interp = Builder::new()
 //!     .restrict(RestrictConfig::strict())
-//!     .io(Rc::new(GlobalIo::null()))
+//!     .io(Arc::new(GlobalIo::null()))
 //!     .module_loader(Box::new(BuiltinModuleLoader))
 //!     .finish();
 //!

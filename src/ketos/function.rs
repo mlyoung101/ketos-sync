@@ -5,7 +5,7 @@ use std::cmp::{max, Ordering};
 use std::f64;
 use std::fmt;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use num::{Float, Zero};
 
@@ -332,30 +332,30 @@ impl PartialEq for Function {
 #[derive(Clone)]
 pub struct Lambda {
     /// Bytecode implementation
-    pub code: Rc<Code>,
+    pub code: Arc<Code>,
     /// Scope in which the lambda was created.
     /// A weak reference is used to prevent cycles.
     pub scope: WeakScope,
     /// Enclosed values
-    pub values: Option<Rc<Box<[Value]>>>,
+    pub values: Option<Arc<Box<[Value]>>>,
 }
 
 impl Lambda {
     /// Creates a new `Lambda`.
-    pub fn new(code: Rc<Code>, scope: &Scope) -> Lambda {
+    pub fn new(code: Arc<Code>, scope: &Scope) -> Lambda {
         Lambda{
             code,
-            scope: Rc::downgrade(scope),
+            scope: Arc::downgrade(scope),
             values: None,
         }
     }
 
     /// Creates a new `Lambda` enclosing a set of values.
-    pub fn new_closure(code: Rc<Code>, scope: WeakScope, values: Box<[Value]>) -> Lambda {
+    pub fn new_closure(code: Arc<Code>, scope: WeakScope, values: Box<[Value]>) -> Lambda {
         Lambda{
             code,
             scope,
-            values: Some(Rc::new(values)),
+            values: Some(Arc::new(values)),
         }
     }
 }
@@ -400,7 +400,7 @@ fn get_string(v: &Value) -> Result<&str, ExecError> {
     FromValueRef::from_value_ref(v)
 }
 
-fn get_struct_def_for(scope: &Scope, v: &Value) -> Result<Rc<StructDef>, ExecError> {
+fn get_struct_def_for(scope: &Scope, v: &Value) -> Result<Arc<StructDef>, ExecError> {
     match *v {
         Value::Struct(ref s) => Ok(s.def().clone()),
         ref fv @ Value::Foreign(_) => get_foreign_value_struct_def(scope, fv),
@@ -408,7 +408,7 @@ fn get_struct_def_for(scope: &Scope, v: &Value) -> Result<Rc<StructDef>, ExecErr
     }
 }
 
-fn get_foreign_value_struct_def(scope: &Scope, v: &Value) -> Result<Rc<StructDef>, ExecError> {
+fn get_foreign_value_struct_def(scope: &Scope, v: &Value) -> Result<Arc<StructDef>, ExecError> {
     match *v {
         Value::Foreign(ref fv) => {
             scope.get_struct_def(fv.type_id())
@@ -418,7 +418,7 @@ fn get_foreign_value_struct_def(scope: &Scope, v: &Value) -> Result<Rc<StructDef
     }
 }
 
-fn get_struct_def(v: &Value) -> Result<&Rc<StructDef>, ExecError> {
+fn get_struct_def(v: &Value) -> Result<&Arc<StructDef>, ExecError> {
     match *v {
         Value::StructDef(ref d) => Ok(d),
         ref v => Err(ExecError::expected("struct-def", v))

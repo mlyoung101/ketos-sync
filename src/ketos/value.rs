@@ -7,7 +7,8 @@ use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::mem::replace;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
+use std::sync::Arc;
 
 use crate::bytes::Bytes;
 use crate::error::Error;
@@ -35,9 +36,9 @@ pub enum Value {
     /// Arbitrary precision ratio
     Ratio(Ratio),
     /// Struct value
-    Struct(Rc<Struct>),
+    Struct(Arc<Struct>),
     /// Struct definition
-    StructDef(Rc<StructDef>),
+    StructDef(Arc<StructDef>),
     /// Literal name
     Name(Name),
     /// Keyword
@@ -66,13 +67,13 @@ pub enum Value {
     /// Compiled bytecode function
     Lambda(Lambda),
     /// Boxed value of a foreign type
-    Foreign(Rc<dyn ForeignValue>),
+    Foreign(Arc<dyn ForeignValue>),
 }
 
 impl Value {
     /// Returns a value of a foreign type.
     pub fn new_foreign<T: ForeignValue>(t: T) -> Value {
-        Value::Foreign(Rc::new(t))
+        Value::Foreign(Arc::new(t))
     }
 
     /// Returns a value containing a foreign function.

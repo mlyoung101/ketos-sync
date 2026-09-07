@@ -1,6 +1,6 @@
 //! Implements builtin `code` module.
 
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::bytecode::{CodeReader, Instruction};
 use crate::compile::compile;
@@ -44,7 +44,7 @@ Given no arguments, returns the documentation string for the current module."))
 /// `compile` compiles an expression into a code object.
 fn fn_compile(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     let code = compile(ctx, &args[0])?;
-    Ok(Value::Lambda(Lambda::new(Rc::new(code), ctx.scope())))
+    Ok(Value::Lambda(Lambda::new(Arc::new(code), ctx.scope())))
 }
 
 /// `disassemble` prints information about a `Lambda` code object.
