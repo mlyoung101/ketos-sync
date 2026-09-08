@@ -1,5 +1,6 @@
 extern crate ketos;
-#[macro_use] extern crate ketos_derive;
+#[macro_use]
+extern crate ketos_derive;
 
 use ketos::{FromValue, Interpreter};
 
@@ -33,9 +34,14 @@ fn test_derive_struct() {
 
     interp.scope().register_struct_value::<Foo>();
 
-    let v = interp.run_code(r#"
+    let v = interp
+        .run_code(
+            r#"
         (new Foo :name "hello" :value 123)
-        "#, None).unwrap();
+        "#,
+            None,
+        )
+        .unwrap();
 
     let foo = Foo::from_value(v).unwrap();
 
@@ -49,9 +55,14 @@ fn test_derive_struct_name() {
 
     interp.scope().register_struct_value::<Bar>();
 
-    let v = interp.run_code(r#"
+    let v = interp
+        .run_code(
+            r#"
         (new Bar :name-with-underscore "foo")
-        "#, None).unwrap();
+        "#,
+            None,
+        )
+        .unwrap();
 
     let bar = Bar::from_value(v).unwrap();
 
@@ -64,9 +75,14 @@ fn test_derive_struct_rename() {
 
     interp.scope().register_struct_value::<Baz>();
 
-    let v = interp.run_code(r#"
+    let v = interp
+        .run_code(
+            r#"
         (new Baz :ketos-name "foo")
-        "#, None).unwrap();
+        "#,
+            None,
+        )
+        .unwrap();
 
     let baz = Baz::from_value(v).unwrap();
 
@@ -82,12 +98,17 @@ fn test_derive_struct_in_struct() {
     interp.scope().register_struct_value::<Baz>();
     interp.scope().register_struct_value::<Quux>();
 
-    let v = interp.run_code(r#"
+    let v = interp
+        .run_code(
+            r#"
         (new Quux
             :foo (new Foo :name "foo" :value 0)
             :bar (new Bar :name-with-underscore "bar")
             :baz (new Baz :ketos-name "baz"))
-        "#, None).unwrap();
+        "#,
+            None,
+        )
+        .unwrap();
 
     let quux = Quux::from_value(v).unwrap();
 

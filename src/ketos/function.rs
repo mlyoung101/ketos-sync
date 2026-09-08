@@ -35,7 +35,9 @@ pub struct SystemFn {
 }
 
 impl Clone for SystemFn {
-    fn clone(&self) -> Self { *self }
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl PartialEq for SystemFn {
@@ -49,7 +51,11 @@ pub type FunctionImpl = fn(&Context, &mut [Value]) -> Result<Value, Error>;
 
 macro_rules! sys_fn {
     ( $callback:path , $arity:expr , $doc:expr ) => {
-        SystemFn{arity: $arity, callback: $callback, doc: Some($doc)}
+        SystemFn {
+            arity: $arity,
+            callback: $callback,
+            doc: Some($doc),
+        }
     };
 }
 
@@ -58,211 +64,388 @@ macro_rules! sys_fn {
 /// These names must correspond exactly to the first `NUM_SYSTEM_FNS`
 /// standard names defined in `name.rs`.
 pub static SYSTEM_FNS: [SystemFn; NUM_SYSTEM_FNS] = [
-    sys_fn!(fn_add,         Min(0),
-"Returns the sum of all arguments.
+    sys_fn!(
+        fn_add,
+        Min(0),
+        "Returns the sum of all arguments.
 
-Given no arguments, returns the additive identity, `0`."),
-    sys_fn!(fn_sub,         Min(1),
-"Returns the cumulative difference between successive arguments."),
-    sys_fn!(fn_mul,         Min(0),
-"Returns the product of all arguments.
+Given no arguments, returns the additive identity, `0`."
+    ),
+    sys_fn!(
+        fn_sub,
+        Min(1),
+        "Returns the cumulative difference between successive arguments."
+    ),
+    sys_fn!(
+        fn_mul,
+        Min(0),
+        "Returns the product of all arguments.
 
-Given no arguments, returns the multiplicative identity, `1`."),
-    sys_fn!(fn_pow,         Exact(2),
-"Returns a base value raised to an exponent."),
-    sys_fn!(fn_div,         Min(1),
-"Returns the cumulative quotient of successive arguments."),
-    sys_fn!(fn_floor_div,   Min(1),
-"Returns the cumulative quotient of successive arguments,
-rounded toward negative infinity."),
-    sys_fn!(fn_rem,         Exact(2),
-"Returns the remainder of two arguments."),
-    sys_fn!(fn_shl,         Exact(2),
-"Returns an integer, bit shifted left by a given number."),
-    sys_fn!(fn_shr,         Exact(2),
-"Returns an integer, bit shifted right by a given number."),
-    sys_fn!(fn_bit_and,     Min(0),
-"Returns the cumulative bitwise AND of all arguments.
+Given no arguments, returns the multiplicative identity, `1`."
+    ),
+    sys_fn!(
+        fn_pow,
+        Exact(2),
+        "Returns a base value raised to an exponent."
+    ),
+    sys_fn!(
+        fn_div,
+        Min(1),
+        "Returns the cumulative quotient of successive arguments."
+    ),
+    sys_fn!(
+        fn_floor_div,
+        Min(1),
+        "Returns the cumulative quotient of successive arguments,
+rounded toward negative infinity."
+    ),
+    sys_fn!(fn_rem, Exact(2), "Returns the remainder of two arguments."),
+    sys_fn!(
+        fn_shl,
+        Exact(2),
+        "Returns an integer, bit shifted left by a given number."
+    ),
+    sys_fn!(
+        fn_shr,
+        Exact(2),
+        "Returns an integer, bit shifted right by a given number."
+    ),
+    sys_fn!(
+        fn_bit_and,
+        Min(0),
+        "Returns the cumulative bitwise AND of all arguments.
 
-Given no arguments, returns the bitwise AND identity, `-1`."),
-    sys_fn!(fn_bit_or,      Min(0),
-"Returns the cumulative bitwise OR of all arguments.
+Given no arguments, returns the bitwise AND identity, `-1`."
+    ),
+    sys_fn!(
+        fn_bit_or,
+        Min(0),
+        "Returns the cumulative bitwise OR of all arguments.
 
-Given no arguments, returns the bitwise OR identity, `0`."),
-    sys_fn!(fn_bit_xor,     Min(0),
-"Returns the cumulative bitwise XOR of all arguments.
+Given no arguments, returns the bitwise OR identity, `0`."
+    ),
+    sys_fn!(
+        fn_bit_xor,
+        Min(0),
+        "Returns the cumulative bitwise XOR of all arguments.
 
-Given no arguments, returns the bitwise XOR identity, `0`."),
-    sys_fn!(fn_bit_not,     Exact(1),
-"Returns an integer, the result of a bitwise NOT operation."),
-    sys_fn!(fn_eq,          Min(2),
-"Returns whether the given arguments compare equal to one another.
+Given no arguments, returns the bitwise XOR identity, `0`."
+    ),
+    sys_fn!(
+        fn_bit_not,
+        Exact(1),
+        "Returns an integer, the result of a bitwise NOT operation."
+    ),
+    sys_fn!(
+        fn_eq,
+        Min(2),
+        "Returns whether the given arguments compare equal to one another.
 
 Values of different types may not be compared. Attempts to do so will
-result in an error."),
-    sys_fn!(fn_ne,          Min(2),
-"Returns whether each given argument differs in value from each other argument.
+result in an error."
+    ),
+    sys_fn!(
+        fn_ne,
+        Min(2),
+        "Returns whether each given argument differs in value from each other argument.
 
 Values of different types may not be compared. Attempts to do so will
-result in an error."),
-    sys_fn!(fn_weak_eq,     Min(2),
-"Returns whether the given arguments compare equal to one another.
+result in an error."
+    ),
+    sys_fn!(
+        fn_weak_eq,
+        Min(2),
+        "Returns whether the given arguments compare equal to one another.
 
-Comparing values of different types will yield `false`."),
-    sys_fn!(fn_weak_ne,     Min(2),
-"Returns whether the given arguments compare not equal to one another.
+Comparing values of different types will yield `false`."
+    ),
+    sys_fn!(
+        fn_weak_ne,
+        Min(2),
+        "Returns whether the given arguments compare not equal to one another.
 
-Comparing values of different types will yield `true`."),
-    sys_fn!(fn_lt,          Min(2),
-"Returns whether each argument compares less than each successive argument.
+Comparing values of different types will yield `true`."
+    ),
+    sys_fn!(
+        fn_lt,
+        Min(2),
+        "Returns whether each argument compares less than each successive argument.
 
 Values of different types may not be compared. Attempts to do so will
-result in an error."),
-    sys_fn!(fn_gt,          Min(2),
-"Returns whether each argument compares greater than each successive argument.
+result in an error."
+    ),
+    sys_fn!(
+        fn_gt,
+        Min(2),
+        "Returns whether each argument compares greater than each successive argument.
 
 Values of different types may not be compared. Attempts to do so will
-result in an error."),
-    sys_fn!(fn_le,          Min(2),
-"Returns whether each argument compares less than or equal to each
+result in an error."
+    ),
+    sys_fn!(
+        fn_le,
+        Min(2),
+        "Returns whether each argument compares less than or equal to each
 successive argument.
 
 Values of different types may not be compared. Attempts to do so will
-result in an error."),
-    sys_fn!(fn_ge,          Min(2),
-"Returns whether each argument compares greater than or equal to each
+result in an error."
+    ),
+    sys_fn!(
+        fn_ge,
+        Min(2),
+        "Returns whether each argument compares greater than or equal to each
 successive argument.
 
 Values of different types may not be compared. Attempts to do so will
-result in an error."),
-    sys_fn!(fn_zero,        Min(1),
-"Returns whether all given values are equal to zero."),
-    sys_fn!(fn_max,         Min(1),
-"Returns the greatest value of given arguments."),
-    sys_fn!(fn_min,         Min(1),
-"Returns the least value of given arguments."),
-    sys_fn!(fn_append,      Min(1),
-"Append a series of elements to a given list."),
-    sys_fn!(fn_elt,         Exact(2),
-"Returns an element from a sequence, starting at zero index."),
-    sys_fn!(fn_concat,      Min(1),
-"Concatenates a series of sequences."),
-    sys_fn!(fn_join,        Min(1),
-"Joins a series of lists or strings and chars using a separator value."),
-    sys_fn!(fn_len,         Exact(1),
-"Returns the length of the given sequence.
+result in an error."
+    ),
+    sys_fn!(
+        fn_zero,
+        Min(1),
+        "Returns whether all given values are equal to zero."
+    ),
+    sys_fn!(
+        fn_max,
+        Min(1),
+        "Returns the greatest value of given arguments."
+    ),
+    sys_fn!(
+        fn_min,
+        Min(1),
+        "Returns the least value of given arguments."
+    ),
+    sys_fn!(
+        fn_append,
+        Min(1),
+        "Append a series of elements to a given list."
+    ),
+    sys_fn!(
+        fn_elt,
+        Exact(2),
+        "Returns an element from a sequence, starting at zero index."
+    ),
+    sys_fn!(fn_concat, Min(1), "Concatenates a series of sequences."),
+    sys_fn!(
+        fn_join,
+        Min(1),
+        "Joins a series of lists or strings and chars using a separator value."
+    ),
+    sys_fn!(
+        fn_len,
+        Exact(1),
+        "Returns the length of the given sequence.
 
-String length is in bytes rather than characters."),
-    sys_fn!(fn_slice,       Range(2, 3),
-"Returns a subsequence of a list or string."),
-    sys_fn!(fn_first,       Exact(1),
-"Returns the first element of the given list or string."),
-    sys_fn!(fn_second,      Exact(1),
-"Returns the second element of the given list."),
-    sys_fn!(fn_last,        Exact(1),
-"Returns the last element of the given list or string."),
-    sys_fn!(fn_init,        Exact(1),
-"Returns all but the last element of the given list or string."),
-    sys_fn!(fn_tail,        Exact(1),
-"Returns all but the first element of the given list or string."),
-    sys_fn!(fn_list,        Min(0),
-"Returns a list of values. In contrast with the `'(a b c ...)` list
-construction syntax, this function will evaluate each of its arguments."),
-    sys_fn!(fn_reverse,     Exact(1),
-"Returns a list in reverse order."),
-    sys_fn!(fn_abs,         Exact(1),
-"Returns the absolute value of the given numerical value."),
-    sys_fn!(fn_ceil,        Exact(1),
-"Returns a number value rounded toward positive infinity."),
-    sys_fn!(fn_floor,       Exact(1),
-"Returns a number value rounded toward negative infinity."),
-    sys_fn!(fn_round,       Exact(1),
-"Returns a number rounded to the nearest integer.
-Rounds half-way cases away from zero."),
-    sys_fn!(fn_trunc,       Exact(1),
-"Returns a number rounded toward zero."),
-    sys_fn!(fn_int,         Exact(1),
-"Truncates a float or ratio value and returns its whole portion as an integer.
+String length is in bytes rather than characters."
+    ),
+    sys_fn!(
+        fn_slice,
+        Range(2, 3),
+        "Returns a subsequence of a list or string."
+    ),
+    sys_fn!(
+        fn_first,
+        Exact(1),
+        "Returns the first element of the given list or string."
+    ),
+    sys_fn!(
+        fn_second,
+        Exact(1),
+        "Returns the second element of the given list."
+    ),
+    sys_fn!(
+        fn_last,
+        Exact(1),
+        "Returns the last element of the given list or string."
+    ),
+    sys_fn!(
+        fn_init,
+        Exact(1),
+        "Returns all but the last element of the given list or string."
+    ),
+    sys_fn!(
+        fn_tail,
+        Exact(1),
+        "Returns all but the first element of the given list or string."
+    ),
+    sys_fn!(
+        fn_list,
+        Min(0),
+        "Returns a list of values. In contrast with the `'(a b c ...)` list
+construction syntax, this function will evaluate each of its arguments."
+    ),
+    sys_fn!(fn_reverse, Exact(1), "Returns a list in reverse order."),
+    sys_fn!(
+        fn_abs,
+        Exact(1),
+        "Returns the absolute value of the given numerical value."
+    ),
+    sys_fn!(
+        fn_ceil,
+        Exact(1),
+        "Returns a number value rounded toward positive infinity."
+    ),
+    sys_fn!(
+        fn_floor,
+        Exact(1),
+        "Returns a number value rounded toward negative infinity."
+    ),
+    sys_fn!(
+        fn_round,
+        Exact(1),
+        "Returns a number rounded to the nearest integer.
+Rounds half-way cases away from zero."
+    ),
+    sys_fn!(fn_trunc, Exact(1), "Returns a number rounded toward zero."),
+    sys_fn!(
+        fn_int,
+        Exact(1),
+        "Truncates a float or ratio value and returns its whole portion as an integer.
 
-If the given value is infinite or `NaN`, an error will result."),
-    sys_fn!(fn_float,       Exact(1),
-"Returns the given value as a floating point value."),
-    sys_fn!(fn_inf,         Min(0),
-"Returns whether all given arguments are equal to positive or negative infinity.
+If the given value is infinite or `NaN`, an error will result."
+    ),
+    sys_fn!(
+        fn_float,
+        Exact(1),
+        "Returns the given value as a floating point value."
+    ),
+    sys_fn!(
+        fn_inf,
+        Min(0),
+        "Returns whether all given arguments are equal to positive or negative infinity.
 
-Given no arguments, returns the value of positive infinity."),
-    sys_fn!(fn_nan,         Min(0),
-"Returns whether all given arguments are equal to `NaN`.
+Given no arguments, returns the value of positive infinity."
+    ),
+    sys_fn!(
+        fn_nan,
+        Min(0),
+        "Returns whether all given arguments are equal to `NaN`.
 
-Given no arguments, returns the value of `NaN`."),
-    sys_fn!(fn_denom,       Exact(1),
-"Returns the denominator of a ratio."),
-    sys_fn!(fn_fract,       Exact(1),
-"Returns the fractional portion of a float or ratio."),
-    sys_fn!(fn_numer,       Exact(1),
-"Returns the numerator of a ratio."),
-    sys_fn!(fn_rat,         Range(1, 2),
-"Returns the given numerical value as a ratio."),
-    sys_fn!(fn_recip,       Exact(1),
-"Returns the reciprocal of the given numeric value.
+Given no arguments, returns the value of `NaN`."
+    ),
+    sys_fn!(fn_denom, Exact(1), "Returns the denominator of a ratio."),
+    sys_fn!(
+        fn_fract,
+        Exact(1),
+        "Returns the fractional portion of a float or ratio."
+    ),
+    sys_fn!(fn_numer, Exact(1), "Returns the numerator of a ratio."),
+    sys_fn!(
+        fn_rat,
+        Range(1, 2),
+        "Returns the given numerical value as a ratio."
+    ),
+    sys_fn!(
+        fn_recip,
+        Exact(1),
+        "Returns the reciprocal of the given numeric value.
 
-If the value is of type integer, the value returned will be a ratio."),
-    sys_fn!(fn_chars,       Exact(1),
-"Returns a string transformed into a list of characters."),
-    sys_fn!(fn_string,      Exact(1),
-"Returns an argument converted into a string."),
-    sys_fn!(fn_path,         Exact(1),
-"Returns an argument converted into a path."),
-    sys_fn!(fn_bytes,       Exact(1),
-"Returns an argument converted into a byte string."),
-    sys_fn!(fn_id,          Exact(1),
-"Returns the unmodified value of the argument received."),
-    sys_fn!(fn_is,          Exact(2),
-"    (is type value)
+If the value is of type integer, the value returned will be a ratio."
+    ),
+    sys_fn!(
+        fn_chars,
+        Exact(1),
+        "Returns a string transformed into a list of characters."
+    ),
+    sys_fn!(
+        fn_string,
+        Exact(1),
+        "Returns an argument converted into a string."
+    ),
+    sys_fn!(
+        fn_path,
+        Exact(1),
+        "Returns an argument converted into a path."
+    ),
+    sys_fn!(
+        fn_bytes,
+        Exact(1),
+        "Returns an argument converted into a byte string."
+    ),
+    sys_fn!(
+        fn_id,
+        Exact(1),
+        "Returns the unmodified value of the argument received."
+    ),
+    sys_fn!(
+        fn_is,
+        Exact(2),
+        "    (is type value)
 
 Returns whether a given expression matches the named type.
 
 `is` also accepts `'number` as a type name, which matches `integer`, `float`,
-and `ratio` type values."),
-    sys_fn!(fn_is_instance, Exact(2),
-"    (is-instance def value)
+and `ratio` type values."
+    ),
+    sys_fn!(
+        fn_is_instance,
+        Exact(2),
+        "    (is-instance def value)
 
 Returns whether a given struct value is an instance of
-the named struct definition."),
-    sys_fn!(fn_null,        Exact(1),
-"Returns whether the given value is unit, `()`."),
-    sys_fn!(fn_type_of,     Exact(1),
-"Returns a name representing the type of the given value."),
-    sys_fn!(fn_dot,         Exact(2),
-"    (. value field-name)
+the named struct definition."
+    ),
+    sys_fn!(
+        fn_null,
+        Exact(1),
+        "Returns whether the given value is unit, `()`."
+    ),
+    sys_fn!(
+        fn_type_of,
+        Exact(1),
+        "Returns a name representing the type of the given value."
+    ),
+    sys_fn!(
+        fn_dot,
+        Exact(2),
+        "    (. value field-name)
 
-Accesses a field from a struct value."),
-    sys_fn!(fn_dot_eq,      Min(1),
-"    (.= struct :field value)
+Accesses a field from a struct value."
+    ),
+    sys_fn!(
+        fn_dot_eq,
+        Min(1),
+        "    (.= struct :field value)
 
-Returns a new struct value with named fields replaced with new values."),
-    sys_fn!(fn_new,         Min(1),
-"    (new struct-def :field value)
+Returns a new struct value with named fields replaced with new values."
+    ),
+    sys_fn!(
+        fn_new,
+        Min(1),
+        "    (new struct-def :field value)
 
-Creates a struct value."),
-    sys_fn!(fn_format,      Min(1),
-"Returns a formatted string."),
-    sys_fn!(fn_print,       Min(1),
-"Prints a formatted string to `stdout`."),
-    sys_fn!(fn_println,     Min(1),
-"Prints a formatted string to `stdout`, followed by a newline."),
-    sys_fn!(fn_eprint,       Min(1),
-"Prints a formatted string to `stderr`."),
-    sys_fn!(fn_eprintln,     Min(1),
-"Prints a formatted string to `stderr`, followed by a newline."),
-    sys_fn!(fn_panic,       Range(0, 1),
-"Immediately interrupts execution upon evaluation.
+Creates a struct value."
+    ),
+    sys_fn!(fn_format, Min(1), "Returns a formatted string."),
+    sys_fn!(fn_print, Min(1), "Prints a formatted string to `stdout`."),
+    sys_fn!(
+        fn_println,
+        Min(1),
+        "Prints a formatted string to `stdout`, followed by a newline."
+    ),
+    sys_fn!(fn_eprint, Min(1), "Prints a formatted string to `stderr`."),
+    sys_fn!(
+        fn_eprintln,
+        Min(1),
+        "Prints a formatted string to `stderr`, followed by a newline."
+    ),
+    sys_fn!(
+        fn_panic,
+        Range(0, 1),
+        "Immediately interrupts execution upon evaluation.
 
-It accepts an optional parameter describing the reason for the panic."),
-    sys_fn!(fn_xor,         Exact(2),
-"Returns the exclusive-or of the given boolean values."),
-    sys_fn!(fn_not,         Exact(1),
-"Returns the inverse of the given boolean value."),
+It accepts an optional parameter describing the reason for the panic."
+    ),
+    sys_fn!(
+        fn_xor,
+        Exact(2),
+        "Returns the exclusive-or of the given boolean values."
+    ),
+    sys_fn!(
+        fn_not,
+        Exact(1),
+        "Returns the inverse of the given boolean value."
+    ),
 ];
 
 /// Describes the number of arguments a function may accept.
@@ -292,10 +475,12 @@ impl fmt::Display for Arity {
         match *self {
             Arity::Exact(n) => write!(f, "{} argument{}", n, plural(n)),
             Arity::Min(n) => write!(f, "at least {} argument{}", n, plural(n)),
-            Arity::Range(min, max) => if min + 1 == max {
-                write!(f, "{} or {} arguments", min, max)
-            } else {
-                write!(f, "between {} and {} arguments", min, max)
+            Arity::Range(min, max) => {
+                if min + 1 == max {
+                    write!(f, "{} or {} arguments", min, max)
+                } else {
+                    write!(f, "between {} and {} arguments", min, max)
+                }
             }
         }
     }
@@ -304,7 +489,11 @@ impl fmt::Display for Arity {
 // TODO: Should probably go into some utility module
 /// Returns the suitable plural suffix `""` or `"s"` for count `n`.
 pub fn plural(n: u32) -> &'static str {
-    if n == 1 { "" } else { "s" }
+    if n == 1 {
+        ""
+    } else {
+        "s"
+    }
 }
 
 /// Represents a function implemented in Rust.
@@ -343,7 +532,7 @@ pub struct Lambda {
 impl Lambda {
     /// Creates a new `Lambda`.
     pub fn new(code: Arc<Code>, scope: &Scope) -> Lambda {
-        Lambda{
+        Lambda {
             code,
             scope: Arc::downgrade(scope),
             values: None,
@@ -352,7 +541,7 @@ impl Lambda {
 
     /// Creates a new `Lambda` enclosing a set of values.
     pub fn new_closure(code: Arc<Code>, scope: WeakScope, values: Box<[Value]>) -> Lambda {
-        Lambda{
+        Lambda {
             code,
             scope,
             values: Some(Arc::new(values)),
@@ -374,7 +563,7 @@ impl PartialEq for Lambda {
     fn eq(&self, rhs: &Lambda) -> bool {
         let a: &Code = &self.code;
         let b: &Code = &rhs.code;
-        (a as *const _) == (b as *const _)
+        std::ptr::eq(a, b)
     }
 }
 
@@ -385,14 +574,14 @@ fn get_float(v: &Value) -> Result<f64, ExecError> {
 fn get_keyword(v: &Value) -> Result<Name, ExecError> {
     match *v {
         Value::Keyword(name) => Ok(name),
-        ref v => Err(ExecError::expected("keyword", v))
+        ref v => Err(ExecError::expected("keyword", v)),
     }
 }
 
 fn get_name(v: &Value) -> Result<Name, ExecError> {
     match *v {
         Value::Name(name) => Ok(name),
-        ref v => Err(ExecError::expected("name", v))
+        ref v => Err(ExecError::expected("name", v)),
     }
 }
 
@@ -404,45 +593,44 @@ fn get_struct_def_for(scope: &Scope, v: &Value) -> Result<Arc<StructDef>, ExecEr
     match *v {
         Value::Struct(ref s) => Ok(s.def().clone()),
         ref fv @ Value::Foreign(_) => get_foreign_value_struct_def(scope, fv),
-        ref v => Err(ExecError::expected("struct", v))
+        ref v => Err(ExecError::expected("struct", v)),
     }
 }
 
 fn get_foreign_value_struct_def(scope: &Scope, v: &Value) -> Result<Arc<StructDef>, ExecError> {
     match *v {
-        Value::Foreign(ref fv) => {
-            scope.get_struct_def(fv.type_id())
-                .ok_or_else(|| ExecError::expected("struct", v))
-        }
-        _ => unreachable!()
+        Value::Foreign(ref fv) => scope
+            .get_struct_def(fv.type_id())
+            .ok_or_else(|| ExecError::expected("struct", v)),
+        _ => unreachable!(),
     }
 }
 
 fn get_struct_def(v: &Value) -> Result<&Arc<StructDef>, ExecError> {
     match *v {
         Value::StructDef(ref d) => Ok(d),
-        ref v => Err(ExecError::expected("struct-def", v))
+        ref v => Err(ExecError::expected("struct-def", v)),
     }
 }
 
 fn expect_integer(v: &Value) -> Result<&Integer, ExecError> {
     match *v {
         Value::Integer(ref i) => Ok(i),
-        _ => Err(ExecError::expected("integer", v))
+        _ => Err(ExecError::expected("integer", v)),
     }
 }
 
 fn expect_integer_owned(v: Value) -> Result<Integer, ExecError> {
     match v {
         Value::Integer(i) => Ok(i),
-        ref v => Err(ExecError::expected("integer", v))
+        ref v => Err(ExecError::expected("integer", v)),
     }
 }
 
 fn expect_number(v: &Value) -> Result<(), ExecError> {
     match *v {
         Value::Float(_) | Value::Integer(_) | Value::Ratio(_) => Ok(()),
-        _ => Err(ExecError::expected("number", v))
+        _ => Err(ExecError::expected("number", v)),
     }
 }
 
@@ -461,37 +649,43 @@ pub fn value_is(scope: &Scope, a: &Value, ty: Name) -> bool {
     use crate::name::standard_names::*;
 
     match *a {
-        Value::Float(_) | Value::Integer(_) | Value::Ratio(_)
-            if ty == NUMBER => true,
+        Value::Float(_) | Value::Integer(_) | Value::Ratio(_) if ty == NUMBER => true,
         Value::Unit | Value::List(_) if ty == LIST => true,
-        Value::Foreign(ref a) =>
-            scope.with_name(ty, |name| a.is_type(name)),
-        _ => type_of(scope, a) == ty
+        Value::Foreign(ref a) => scope.with_name(ty, |name| a.is_type(name)),
+        _ => type_of(scope, a) == ty,
     }
 }
 
-fn coerce_numbers(lhs: Value, rhs: &Value) -> Result<(Value, Cow<Value>), ExecError> {
+fn coerce_numbers(lhs: Value, rhs: &Value) -> Result<(Value, Cow<'_, Value>), ExecError> {
     let (lhs, rhs) = match (lhs, rhs) {
         (lhs @ Value::Float(_), rhs @ &Value::Float(_))
         | (lhs @ Value::Integer(_), rhs @ &Value::Integer(_))
         | (lhs @ Value::Ratio(_), rhs @ &Value::Ratio(_)) => (lhs, Borrowed(rhs)),
 
-        (Value::Float(lhs), &Value::Integer(ref i)) =>
-            (lhs.into(), Owned(i.to_f64().ok_or(ExecError::Overflow)?.into())),
-        (Value::Integer(ref i), rhs @ &Value::Float(_)) =>
-            (i.to_f64().ok_or(ExecError::Overflow)?.into(), Borrowed(rhs)),
+        (Value::Float(lhs), Value::Integer(i)) => (
+            lhs.into(),
+            Owned(i.to_f64().ok_or(ExecError::Overflow)?.into()),
+        ),
+        (Value::Integer(ref i), rhs @ &Value::Float(_)) => {
+            (i.to_f64().ok_or(ExecError::Overflow)?.into(), Borrowed(rhs))
+        }
 
-        (ref mut lhs @ Value::Ratio(_), &Value::Integer(ref i)) =>
-            (lhs.take(), Owned(Ratio::from_integer(i.clone()).into())),
-        (Value::Integer(i), rhs @ &Value::Ratio(_)) =>
-            (Ratio::from_integer(i).into(), Borrowed(rhs)),
+        (ref mut lhs @ Value::Ratio(_), Value::Integer(i)) => {
+            (lhs.take(), Owned(Ratio::from_integer(i.clone()).into()))
+        }
+        (Value::Integer(i), rhs @ &Value::Ratio(_)) => {
+            (Ratio::from_integer(i).into(), Borrowed(rhs))
+        }
 
-        (Value::Float(lhs), &Value::Ratio(ref r)) =>
-            (lhs.into(), Owned(r.to_f64().ok_or(ExecError::Overflow)?.into())),
-        (Value::Ratio(ref r), rhs @ &Value::Float(_)) =>
-            (r.to_f64().ok_or(ExecError::Overflow)?.into(), Borrowed(rhs)),
+        (Value::Float(lhs), Value::Ratio(r)) => (
+            lhs.into(),
+            Owned(r.to_f64().ok_or(ExecError::Overflow)?.into()),
+        ),
+        (Value::Ratio(ref r), rhs @ &Value::Float(_)) => {
+            (r.to_f64().ok_or(ExecError::Overflow)?.into(), Borrowed(rhs))
+        }
 
-        (lhs, rhs) => (lhs, Borrowed(rhs))
+        (lhs, rhs) => (lhs, Borrowed(rhs)),
     };
 
     Ok((lhs, rhs))
@@ -526,11 +720,11 @@ pub fn add_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
     match (lhs, &*rhs) {
         (Value::Float(a), &Value::Float(b)) => Ok((a + b).into()),
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Integer(ref a), Value::Integer(b)) => {
             check_bits(ctx, max(a.bits(), b.bits()) + 1)?;
             Ok((a + b).into())
         }
-        (Value::Ratio(ref a), &Value::Ratio(ref b)) => {
+        (Value::Ratio(ref a), Value::Ratio(b)) => {
             let nd = a.numer().bits() + b.denom().bits();
             let dn = a.denom().bits() + b.numer().bits();
             let dd = a.denom().bits() + b.denom().bits();
@@ -540,7 +734,7 @@ pub fn add_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
             Ok((a + b).into())
         }
-        (a, b) => Err(From::from(ExecError::TypeMismatch{
+        (a, b) => Err(From::from(ExecError::TypeMismatch {
             lhs: a.type_name(),
             rhs: b.type_name(),
         })),
@@ -571,7 +765,7 @@ pub fn neg_number(v: Value) -> Result<Value, Error> {
         Value::Float(f) => Ok((-f).into()),
         Value::Integer(i) => Ok((-i).into()),
         Value::Ratio(r) => Ok((-r).into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -581,11 +775,11 @@ pub fn sub_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
     match (lhs, &*rhs) {
         (Value::Float(a), &Value::Float(b)) => Ok((a - b).into()),
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Integer(ref a), Value::Integer(b)) => {
             check_bits(ctx, max(a.bits(), b.bits()) + 1)?;
             Ok((a - b).into())
         }
-        (Value::Ratio(ref a), &Value::Ratio(ref b)) => {
+        (Value::Ratio(ref a), Value::Ratio(b)) => {
             let nd = a.numer().bits() + b.denom().bits();
             let dn = a.denom().bits() + b.numer().bits();
             let dd = a.denom().bits() + b.denom().bits();
@@ -595,10 +789,10 @@ pub fn sub_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
             Ok((a - b).into())
         }
-        (a, b) => Err(From::from(ExecError::TypeMismatch{
+        (a, b) => Err(From::from(ExecError::TypeMismatch {
             lhs: a.type_name(),
             rhs: b.type_name(),
-        }))
+        })),
     }
 }
 
@@ -628,11 +822,11 @@ pub fn mul_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
     match (lhs, &*rhs) {
         (Value::Float(a), &Value::Float(b)) => Ok((a * b).into()),
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Integer(ref a), Value::Integer(b)) => {
             check_bits(ctx, a.bits() + b.bits())?;
             Ok((a * b).into())
         }
-        (Value::Ratio(ref a), &Value::Ratio(ref b)) => {
+        (Value::Ratio(ref a), Value::Ratio(b)) => {
             let nn = a.numer().bits() + b.numer().bits();
             let dd = a.denom().bits() + b.denom().bits();
 
@@ -641,10 +835,10 @@ pub fn mul_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
             Ok((a * b).into())
         }
-        (a, b) => Err(From::from(ExecError::TypeMismatch{
+        (a, b) => Err(From::from(ExecError::TypeMismatch {
             lhs: a.type_name(),
             rhs: b.type_name(),
-        }))
+        })),
     }
 }
 
@@ -719,20 +913,18 @@ fn check_bits(ctx: &Context, bits: usize) -> Result<(), RestrictError> {
 
 fn pow_number(ctx: &Context, lhs: Value, rhs: Value) -> Result<Value, Error> {
     match (&lhs, &rhs) {
-        (&Value::Ratio(ref a), &Value::Integer(ref b)) =>
-            return pow_ratio_integer(ctx, a, b),
-        (&Value::Ratio(ref a), &Value::Ratio(ref b)) if b.is_integer() =>
-            return pow_ratio_integer(ctx, a, b.numer()),
-        _ => ()
+        (Value::Ratio(a), Value::Integer(b)) => return pow_ratio_integer(ctx, a, b),
+        (Value::Ratio(a), Value::Ratio(b)) if b.is_integer() => {
+            return pow_ratio_integer(ctx, a, b.numer())
+        }
+        _ => (),
     }
 
     let (lhs, rhs) = coerce_numbers(lhs, &rhs)?;
 
     match (lhs, &*rhs) {
-        (Value::Float(a), &Value::Float(b)) => {
-            Ok(a.powf(b).into())
-        }
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Float(a), &Value::Float(b)) => Ok(a.powf(b).into()),
+        (Value::Integer(ref a), Value::Integer(b)) => {
             if b.is_negative() {
                 let a = a.to_f64().ok_or(ExecError::Overflow)?;
                 let b = b.to_f64().ok_or(ExecError::Overflow)?;
@@ -742,13 +934,13 @@ fn pow_number(ctx: &Context, lhs: Value, rhs: Value) -> Result<Value, Error> {
                 try_pow(ctx, a, exp).map(|i| i.into())
             }
         }
-        (Value::Ratio(ref a), &Value::Ratio(ref b)) => {
+        (Value::Ratio(ref a), Value::Ratio(b)) => {
             let a = a.to_f64().ok_or(ExecError::Overflow)?;
             let b = b.to_f64().ok_or(ExecError::Overflow)?;
 
             Ok(a.powf(b).into())
         }
-        (ref a, b) => Err(From::from(ExecError::TypeMismatch{
+        (ref a, b) => Err(From::from(ExecError::TypeMismatch {
             lhs: a.type_name(),
             rhs: b.type_name(),
         })),
@@ -814,14 +1006,12 @@ fn floor_recip_number(v: Value) -> Result<Value, Error> {
             test_zero(i)?;
             Ok((Integer::one() / i).into())
         }
-        Value::Float(f) => {
-            Ok(f.recip().floor().into())
-        }
+        Value::Float(f) => Ok(f.recip().floor().into()),
         Value::Ratio(ref r) => {
             test_zero(r)?;
             Ok(r.recip().floor().into())
         }
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -830,10 +1020,8 @@ pub fn div_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
     let (lhs, rhs) = coerce_numbers(lhs, rhs)?;
 
     match (lhs, &*rhs) {
-        (Value::Float(a), &Value::Float(b)) => {
-            Ok((a / b).into())
-        }
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Float(a), &Value::Float(b)) => Ok((a / b).into()),
+        (Value::Integer(ref a), Value::Integer(b)) => {
             test_zero(b)?;
             if a.is_multiple_of(b) {
                 Ok((a / b).into())
@@ -841,7 +1029,7 @@ pub fn div_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
                 Ok(Ratio::new(a.clone(), b.clone()).into())
             }
         }
-        (Value::Ratio(ref a), &Value::Ratio(ref b)) => {
+        (Value::Ratio(ref a), Value::Ratio(b)) => {
             test_zero(b)?;
 
             let nd = a.numer().bits() + b.denom().bits();
@@ -852,10 +1040,10 @@ pub fn div_number(ctx: &Context, lhs: Value, rhs: &Value) -> Result<Value, Error
 
             Ok((a / b).into())
         }
-        (a, b) => Err(From::from(ExecError::TypeMismatch{
+        (a, b) => Err(From::from(ExecError::TypeMismatch {
             lhs: a.type_name(),
             rhs: b.type_name(),
-        }))
+        })),
     }
 }
 
@@ -865,11 +1053,11 @@ pub fn floor_div_number_step(ctx: &Context, lhs: Value, rhs: &Value) -> Result<V
     let (lhs, rhs) = coerce_numbers(lhs, rhs)?;
 
     match (lhs, &*rhs) {
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Integer(ref a), Value::Integer(b)) => {
             test_zero(b)?;
             Ok((a / b).into())
         }
-        (lhs, rhs) => div_number(ctx, lhs, rhs)
+        (lhs, rhs) => div_number(ctx, lhs, rhs),
     }
 }
 
@@ -888,21 +1076,19 @@ fn rem_number(lhs: Value, rhs: &Value) -> Result<Value, Error> {
     let (lhs, rhs) = coerce_numbers(lhs, rhs)?;
 
     match (lhs, &*rhs) {
-        (Value::Float(a), &Value::Float(b)) => {
-            Ok((a % b).into())
-        }
-        (Value::Integer(ref a), &Value::Integer(ref b)) => {
+        (Value::Float(a), &Value::Float(b)) => Ok((a % b).into()),
+        (Value::Integer(ref a), Value::Integer(b)) => {
             test_zero(b)?;
             Ok((a % b).into())
         }
-        (Value::Ratio(ref a), &Value::Ratio(ref b)) => {
+        (Value::Ratio(ref a), Value::Ratio(b)) => {
             test_zero(b)?;
             Ok((a % b).into())
         }
-        (a, b) => Err(From::from(ExecError::TypeMismatch{
+        (a, b) => Err(From::from(ExecError::TypeMismatch {
             lhs: a.type_name(),
             rhs: b.type_name(),
-        }))
+        })),
     }
 }
 
@@ -1069,7 +1255,7 @@ fn fn_ne(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 fn fn_weak_eq(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match fn_eq(ctx, args) {
         Ok(v) => Ok(v),
-        Err(_) => Ok(false.into())
+        Err(_) => Ok(false.into()),
     }
 }
 
@@ -1079,7 +1265,7 @@ fn fn_weak_eq(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 fn fn_weak_ne(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match fn_ne(ctx, args) {
         Ok(v) => Ok(v),
-        Err(_) => Ok(true.into())
+        Err(_) => Ok(true.into()),
     }
 }
 
@@ -1178,7 +1364,7 @@ fn fn_zero(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
             Value::Float(a) => a == 0.0,
             Value::Integer(ref a) => a.is_zero(),
             Value::Ratio(ref a) => a.is_zero(),
-            ref v => return Err(From::from(ExecError::expected("number", v)))
+            ref v => return Err(From::from(ExecError::expected("number", v))),
         };
 
         if !is_zero {
@@ -1198,7 +1384,7 @@ fn fn_xor(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match (a, b) {
         (&Value::Bool(a), &Value::Bool(b)) => Ok((a ^ b).into()),
         (&Value::Bool(_), b) => Err(From::from(ExecError::expected("bool", b))),
-        (a, _) => Err(From::from(ExecError::expected("bool", a)))
+        (a, _) => Err(From::from(ExecError::expected("bool", a))),
     }
 }
 
@@ -1206,7 +1392,7 @@ fn fn_xor(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 fn fn_not(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0] {
         Value::Bool(a) => Ok((!a).into()),
-        ref v => Err(From::from(ExecError::expected("bool", v)))
+        ref v => Err(From::from(ExecError::expected("bool", v))),
     }
 }
 
@@ -1243,7 +1429,7 @@ fn fn_is_instance(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 fn fn_null(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     let is_null = match args[0] {
         Value::Unit => true,
-        _ => false
+        _ => false,
     };
 
     Ok(is_null.into())
@@ -1272,10 +1458,10 @@ fn type_of(scope: &Scope, v: &Value) -> Name {
         Value::List(_) => LIST,
         Value::Function(_) => FUNCTION,
         Value::Lambda(_) => LAMBDA,
-        Value::Quasiquote(_, _) |
-        Value::Comma(_, _) |
-        Value::CommaAt(_, _) |
-        Value::Quote(_, _) => OBJECT,
+        Value::Quasiquote(_, _)
+        | Value::Comma(_, _)
+        | Value::CommaAt(_, _)
+        | Value::Quote(_, _) => OBJECT,
         Value::Foreign(ref a) => scope.add_name(a.type_name()),
     }
 }
@@ -1316,7 +1502,7 @@ fn fn_dot_eq(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 
         let value = match iter.next() {
             Some(v) => v.take(),
-            None => return Err(From::from(ExecError::OddKeywordParams))
+            None => return Err(From::from(ExecError::OddKeywordParams)),
         };
 
         if fields.iter().any(|&(n, _)| n == name) {
@@ -1326,7 +1512,8 @@ fn fn_dot_eq(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         fields.push((name, value));
     }
 
-    def.def().replace_fields(ctx.scope(), &def, value, &mut fields)
+    def.def()
+        .replace_fields(ctx.scope(), &def, value, &mut fields)
 }
 
 /// `new` creates a struct value.
@@ -1345,7 +1532,7 @@ fn fn_new(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 
         let value = match iter.next() {
             Some(value) => value.take(),
-            None => return Err(From::from(ExecError::OddKeywordParams))
+            None => return Err(From::from(ExecError::OddKeywordParams)),
         };
 
         if fields.iter().any(|&(n, _)| n == name) {
@@ -1433,7 +1620,7 @@ fn fn_append(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     let mut v = match args[0].take() {
         Value::Unit => Vec::new(),
         Value::List(li) => li.into_vec(),
-        ref v => return Err(From::from(ExecError::expected("list", v)))
+        ref v => return Err(From::from(ExecError::expected("list", v))),
     };
 
     v.extend(args[1..].iter_mut().map(|v| v.take()));
@@ -1453,12 +1640,16 @@ fn fn_elt(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     let idx = usize::from_value_ref(idx)?;
 
     match *li {
-        Value::List(ref li) => li.get(idx).cloned()
+        Value::List(ref li) => li
+            .get(idx)
+            .cloned()
             .ok_or_else(|| From::from(ExecError::OutOfBounds(idx))),
-        Value::Bytes(ref b) => b.get(idx).cloned()
+        Value::Bytes(ref b) => b
+            .get(idx)
+            .cloned()
             .map(|b| b.into())
             .ok_or_else(|| From::from(ExecError::OutOfBounds(idx))),
-        ref v => Err(From::from(ExecError::expected("indexable sequence", v)))
+        ref v => Err(From::from(ExecError::expected("indexable sequence", v))),
     }
 }
 
@@ -1475,7 +1666,7 @@ fn fn_concat(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Char(_) | Value::String(_) => concat_string(args),
         Value::Bytes(_) => concat_bytes(args),
         Value::Path(_) => concat_path(args),
-        ref v => Err(From::from(ExecError::expected("list or string", v)))
+        ref v => Err(From::from(ExecError::expected("list or string", v))),
     }
 }
 
@@ -1490,7 +1681,7 @@ fn concat_list(args: &mut [Value]) -> Result<Value, Error> {
         match arg.take() {
             Value::Unit => (),
             Value::List(li) => v.extend(li.into_vec()),
-            ref v => return Err(From::from(ExecError::expected("list", v)))
+            ref v => return Err(From::from(ExecError::expected("list", v))),
         }
     }
 
@@ -1508,7 +1699,7 @@ fn concat_string(args: &mut [Value]) -> Result<Value, Error> {
         match *arg {
             Value::Char(ch) => res.push(ch),
             Value::String(ref s) => res.push_str(s),
-            ref v => return Err(From::from(ExecError::expected("char or string", v)))
+            ref v => return Err(From::from(ExecError::expected("char or string", v))),
         }
     }
 
@@ -1566,7 +1757,7 @@ fn fn_join(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::String(ref s) if s.is_empty() => concat_string(rest),
         Value::String(ref s) => join_string(s, rest),
         Value::Bytes(ref s) => join_bytes(s, rest),
-        ref v => Err(From::from(ExecError::expected("list or string", v)))
+        ref v => Err(From::from(ExecError::expected("list or string", v))),
     }
 }
 
@@ -1577,7 +1768,7 @@ fn join_list(sep: &[Value], args: &mut [Value]) -> Result<Value, Error> {
         match first.take() {
             Value::Unit => (),
             Value::List(li) => v.extend(li.into_vec()),
-            ref v => return Err(From::from(ExecError::expected("list", v)))
+            ref v => return Err(From::from(ExecError::expected("list", v))),
         }
 
         for arg in rest {
@@ -1586,7 +1777,7 @@ fn join_list(sep: &[Value], args: &mut [Value]) -> Result<Value, Error> {
             match arg.take() {
                 Value::Unit => (),
                 Value::List(li) => v.extend(li.into_vec()),
-                ref v => return Err(From::from(ExecError::expected("list", v)))
+                ref v => return Err(From::from(ExecError::expected("list", v))),
             }
         }
     }
@@ -1601,7 +1792,7 @@ fn join_string(sep: &str, args: &mut [Value]) -> Result<Value, Error> {
         match *value {
             Value::Char(ch) => res.push(ch),
             Value::String(ref s) => res.push_str(s),
-            ref v => return Err(From::from(ExecError::expected("char or string", v)))
+            ref v => return Err(From::from(ExecError::expected("char or string", v))),
         }
 
         for arg in &args[1..] {
@@ -1609,7 +1800,7 @@ fn join_string(sep: &str, args: &mut [Value]) -> Result<Value, Error> {
             match *arg {
                 Value::Char(ch) => res.push(ch),
                 Value::String(ref s) => res.push_str(s),
-                ref v => return Err(From::from(ExecError::expected("char or string", v)))
+                ref v => return Err(From::from(ExecError::expected("char or string", v))),
             }
         }
     }
@@ -1643,7 +1834,7 @@ fn fn_len(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::List(ref li) => li.len(),
         Value::String(ref s) => s.len(),
         Value::Bytes(ref b) => b.len(),
-        ref v => return Err(From::from(ExecError::expected("sequence", v)))
+        ref v => return Err(From::from(ExecError::expected("sequence", v))),
     };
 
     Ok(n.into())
@@ -1688,7 +1879,7 @@ fn fn_slice(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
                     Ok(b.slice(begin..).into())
                 }
             }
-            ref v => Err(From::from(ExecError::expected("list or string", v)))
+            ref v => Err(From::from(ExecError::expected("list or string", v))),
         }
     } else {
         let end = usize::from_value_ref(&args[2])?;
@@ -1741,7 +1932,7 @@ fn fn_slice(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
                     Ok(b.slice(begin..end).into())
                 }
             }
-            ref v => Err(From::from(ExecError::expected("list or string", v)))
+            ref v => Err(From::from(ExecError::expected("list or string", v))),
         }
     }
 }
@@ -1754,9 +1945,11 @@ fn fn_first(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 /// `second` returns the second element of the given list.
 fn fn_second(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0] {
-        Value::List(ref mut li) => li.get(1).cloned()
+        Value::List(ref mut li) => li
+            .get(1)
+            .cloned()
             .ok_or_else(|| From::from(ExecError::OutOfBounds(1))),
-        ref v => Err(From::from(ExecError::expected("list", v)))
+        ref v => Err(From::from(ExecError::expected("list", v))),
     }
 }
 
@@ -1784,13 +1977,13 @@ pub fn first(v: &Value) -> Result<Value, Error> {
         Value::List(ref li) => Ok(li[0].clone()),
         Value::String(ref s) => match s.chars().next() {
             Some(ch) => Ok(ch.into()),
-            None => Err(From::from(ExecError::OutOfBounds(0)))
+            None => Err(From::from(ExecError::OutOfBounds(0))),
         },
         Value::Bytes(ref b) => match b.iter().next() {
             Some(&b) => Ok(b.into()),
-            None => Err(From::from(ExecError::OutOfBounds(0)))
+            None => Err(From::from(ExecError::OutOfBounds(0))),
         },
-        ref v => Err(From::from(ExecError::expected("sequence", v)))
+        ref v => Err(From::from(ExecError::expected("sequence", v))),
     }
 }
 
@@ -1802,13 +1995,13 @@ pub fn last(v: &Value) -> Result<Value, Error> {
         Value::List(ref li) => Ok(li.last().cloned().unwrap()),
         Value::String(ref s) => match s.chars().next_back() {
             Some(ch) => Ok(ch.into()),
-            None => Err(From::from(ExecError::OutOfBounds(0)))
+            None => Err(From::from(ExecError::OutOfBounds(0))),
         },
         Value::Bytes(ref b) => match b.iter().next_back() {
             Some(&b) => Ok(b.into()),
-            None => Err(From::from(ExecError::OutOfBounds(0)))
+            None => Err(From::from(ExecError::OutOfBounds(0))),
         },
-        ref v => Err(From::from(ExecError::expected("sequence", v)))
+        ref v => Err(From::from(ExecError::expected("sequence", v))),
     }
 }
 
@@ -1826,7 +2019,7 @@ pub fn init(v: &Value) -> Result<Value, Error> {
 
             match chars.next_back() {
                 Some((idx, _)) => Ok(s.slice(..idx).into()),
-                None => Err(From::from(ExecError::OutOfBounds(0)))
+                None => Err(From::from(ExecError::OutOfBounds(0))),
             }
         }
         Value::Bytes(ref b) => {
@@ -1837,7 +2030,7 @@ pub fn init(v: &Value) -> Result<Value, Error> {
                 Ok(b.slice(..len - 1).into())
             }
         }
-        ref v => Err(From::from(ExecError::expected("sequence", v)))
+        ref v => Err(From::from(ExecError::expected("sequence", v))),
     }
 }
 
@@ -1846,15 +2039,13 @@ pub fn init(v: &Value) -> Result<Value, Error> {
 /// Returns an error in case of an empty list or string.
 pub fn tail(v: &Value) -> Result<Value, Error> {
     match *v {
-        Value::List(ref li) => {
-            Ok(li.slice(1..).into())
-        }
+        Value::List(ref li) => Ok(li.slice(1..).into()),
         Value::String(ref s) => {
             let mut chars = s.chars();
 
             match chars.next() {
                 Some(ch) => Ok(s.slice(ch.len_utf8()..).into()),
-                None => Err(From::from(ExecError::OutOfBounds(0)))
+                None => Err(From::from(ExecError::OutOfBounds(0))),
             }
         }
         Value::Bytes(ref b) => {
@@ -1864,7 +2055,7 @@ pub fn tail(v: &Value) -> Result<Value, Error> {
                 Ok(b.slice(1..).into())
             }
         }
-        ref v => Err(From::from(ExecError::expected("sequence", v)))
+        ref v => Err(From::from(ExecError::expected("sequence", v))),
     }
 }
 
@@ -1876,8 +2067,7 @@ pub fn tail(v: &Value) -> Result<Value, Error> {
 /// (list (foo) (+ 1 2 3))
 /// ```
 fn fn_list(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
-    Ok(args.iter_mut().map(|v| v.take())
-        .collect::<Vec<_>>().into())
+    Ok(args.iter_mut().map(|v| v.take()).collect::<Vec<_>>().into())
 }
 
 /// `reverse` returns a list in reverse order.
@@ -1889,7 +2079,7 @@ fn fn_reverse(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
             li.reverse();
             Ok(li.into())
         }
-        ref v => Err(From::from(ExecError::expected("list", v)))
+        ref v => Err(From::from(ExecError::expected("list", v))),
     }
 }
 
@@ -1899,7 +2089,7 @@ fn fn_abs(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Float(f) => Ok(f.abs().into()),
         Value::Integer(ref i) => Ok(i.abs().into()),
         Value::Ratio(ref r) => Ok(r.abs().into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -1909,7 +2099,7 @@ fn fn_ceil(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Float(f) => Ok(f.ceil().into()),
         Value::Integer(i) => Ok(i.into()),
         Value::Ratio(ref r) => Ok(r.ceil().into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -1924,7 +2114,7 @@ pub fn floor_number(v: Value) -> Result<Value, Error> {
         Value::Float(f) => Ok(f.floor().into()),
         Value::Integer(i) => Ok(i.into()),
         Value::Ratio(ref r) => Ok(r.floor().into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -1935,7 +2125,7 @@ fn fn_round(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Float(f) => Ok(f.round().into()),
         Value::Integer(i) => Ok(i.into()),
         Value::Ratio(ref r) => Ok(r.round().into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -1945,7 +2135,7 @@ fn fn_trunc(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Float(f) => Ok(f.trunc().into()),
         Value::Integer(i) => Ok(i.into()),
         Value::Ratio(ref r) => Ok(r.trunc().into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -1957,11 +2147,12 @@ fn fn_int(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Float(f) => match f {
             f if f.is_infinite() || f.is_nan() => Err(From::from(ExecError::Overflow)),
             f => Integer::from_f64(f)
-                .map(Value::Integer).ok_or_else(|| From::from(ExecError::Overflow)),
+                .map(Value::Integer)
+                .ok_or_else(|| From::from(ExecError::Overflow)),
         },
         Value::Integer(i) => Ok(i.into()),
         Value::Ratio(ref r) => Ok(r.to_integer().into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -1971,7 +2162,7 @@ fn fn_float(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         Value::Float(f) => Ok(f.into()),
         Value::Integer(ref i) => Ok(i.to_f64().ok_or(ExecError::Overflow)?.into()),
         Value::Ratio(ref r) => Ok(r.to_f64().ok_or(ExecError::Overflow)?.into()),
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -2018,7 +2209,7 @@ fn fn_denom(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0] {
         Value::Integer(_) => Ok(Integer::one().into()),
         Value::Ratio(ref r) => Ok(r.denom().clone().into()),
-        ref v => Err(From::from(ExecError::expected("integer or ratio", v)))
+        ref v => Err(From::from(ExecError::expected("integer or ratio", v))),
     }
 }
 
@@ -2027,7 +2218,7 @@ fn fn_fract(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0] {
         Value::Float(f) => Ok(f.fract().into()),
         Value::Ratio(ref r) => Ok(r.fract().into()),
-        ref v => Err(From::from(ExecError::expected("float or ratio", v)))
+        ref v => Err(From::from(ExecError::expected("float or ratio", v))),
     }
 }
 
@@ -2036,7 +2227,7 @@ fn fn_numer(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0].take() {
         i @ Value::Integer(_) => Ok(i),
         Value::Ratio(r) => Ok(r.numer().clone().into()),
-        ref v => Err(From::from(ExecError::expected("integer or ratio", v)))
+        ref v => Err(From::from(ExecError::expected("integer or ratio", v))),
     }
 }
 
@@ -2045,13 +2236,14 @@ fn fn_rat(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     if args.len() == 1 {
         match args[0].take() {
             Value::Float(f) => Ratio::from_f64(f)
-                .map(Value::Ratio).ok_or_else(|| From::from(ExecError::Overflow)),
-            Value::Integer(a) =>
-                Ok(Ratio::from_integer(a).into()),
+                .map(Value::Ratio)
+                .ok_or_else(|| From::from(ExecError::Overflow)),
+            Value::Integer(a) => Ok(Ratio::from_integer(a).into()),
             Value::Ratio(r) => Ok(r.into()),
-            ref v => Err(From::from(ExecError::expected("number", v)))
+            ref v => Err(From::from(ExecError::expected("number", v))),
         }
-    } else { // args.len() == 2
+    } else {
+        // args.len() == 2
         let a = args[0].take();
         let b = args[1].take();
 
@@ -2061,7 +2253,7 @@ fn fn_rat(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
                 Ok(Ratio::new(a, b).into())
             }
             (Value::Integer(_), ref b) => Err(From::from(ExecError::expected("integer", b))),
-            (ref a, _) => Err(From::from(ExecError::expected("integer", a)))
+            (ref a, _) => Err(From::from(ExecError::expected("integer", a))),
         }
     }
 }
@@ -2083,7 +2275,7 @@ fn recip_number(v: Value) -> Result<Value, Error> {
             test_zero(a.numer())?;
             Ok(a.recip().into())
         }
-        ref v => Err(From::from(ExecError::expected("number", v)))
+        ref v => Err(From::from(ExecError::expected("number", v))),
     }
 }
 
@@ -2103,7 +2295,7 @@ fn fn_string(ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
         }
         Value::Name(name) => Ok(ctx.scope().with_name(name, |s| s.into())),
         v @ Value::String(_) => Ok(v),
-        ref v => Err(From::from(ExecError::expected("char or string or name", v)))
+        ref v => Err(From::from(ExecError::expected("char or string or name", v))),
     }
 }
 
@@ -2112,7 +2304,7 @@ fn fn_path(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0].take() {
         Value::String(s) => Ok(PathBuf::from(s.into_string()).into()),
         v @ Value::Path(_) => Ok(v),
-        ref v => Err(From::from(ExecError::expected("string or path", v)))
+        ref v => Err(From::from(ExecError::expected("string or path", v))),
     }
 }
 
@@ -2121,10 +2313,11 @@ fn fn_bytes(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
     match args[0].take() {
         Value::Unit => Ok(Bytes::from(Vec::new()).into()),
         li @ Value::List(_) => <Vec<u8>>::from_value_ref(&li)
-            .map(|b| Bytes::from(b).into()).map_err(From::from),
+            .map(|b| Bytes::from(b).into())
+            .map_err(From::from),
         Value::String(s) => Ok(Bytes::from(s.into_string()).into()),
         v @ Value::Bytes(_) => Ok(v),
-        ref v => Err(From::from(ExecError::expected("bytes or string", v)))
+        ref v => Err(From::from(ExecError::expected("bytes or string", v))),
     }
 }
 
@@ -2157,5 +2350,7 @@ fn fn_min(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
 /// `panic` immediately interrupts execution upon evaluation.
 /// It accepts an optional parameter describing the reason for the panic.
 fn fn_panic(_ctx: &Context, args: &mut [Value]) -> Result<Value, Error> {
-    Err(From::from(ExecError::Panic(args.get_mut(0).map(|v| v.take()))))
+    Err(From::from(ExecError::Panic(
+        args.get_mut(0).map(|v| v.take()),
+    )))
 }

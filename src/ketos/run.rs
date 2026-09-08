@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use crate::compile::compile;
 use crate::error::Error;
-use crate::exec::{Context, execute};
+use crate::exec::{execute, Context};
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::value::Value;
@@ -19,7 +19,8 @@ pub fn run_code(ctx: &Context, input: &str) -> Result<Value, Error> {
         p.parse_exprs()?
     };
 
-    let code = exprs.iter()
+    let code = exprs
+        .iter()
         .map(|v| compile(ctx, v))
         .collect::<Result<Vec<_>, _>>()?;
 

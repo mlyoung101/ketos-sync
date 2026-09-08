@@ -19,8 +19,9 @@ macro_rules! impl_any_cast {
             }
 
             /// Attempts to downcast a `Box<Trait>` to a concrete type.
-            pub fn downcast<T: $ty>(bx: ::std::boxed::Box<Self>)
-                    -> Result<::std::boxed::Box<T>, ::std::boxed::Box<Self>> {
+            pub fn downcast<T: $ty>(
+                bx: ::std::boxed::Box<Self>,
+            ) -> Result<::std::boxed::Box<T>, ::std::boxed::Box<Self>> {
                 if bx.is::<T>() {
                     unsafe {
                         let raw = ::std::boxed::Box::into_raw(bx);
@@ -33,8 +34,9 @@ macro_rules! impl_any_cast {
 
             /// Returns an owned `Rc` reference to the contained value,
             /// if it is of the given type.
-            pub fn downcast_rc<T: $ty>(rc: ::std::sync::Arc<Self>)
-                    -> Result<::std::sync::Arc<T>, ::std::sync::Arc<Self>> {
+            pub fn downcast_rc<T: $ty>(
+                rc: ::std::sync::Arc<Self>,
+            ) -> Result<::std::sync::Arc<T>, ::std::sync::Arc<Self>> {
                 if rc.is::<T>() {
                     unsafe {
                         let obj: $crate::any::TraitObject = ::std::mem::transmute(rc);
@@ -70,18 +72,18 @@ macro_rules! impl_any_cast {
                 }
             }
         }
-    }
+    };
 }
 
 #[cfg(test)]
 mod test {
     use std::any::Any;
     use std::fmt;
-use std::sync::Arc;
+    use std::sync::Arc;
 
     trait SomeTrait: Any + fmt::Debug {}
 
-    impl_any_cast!{ SomeTrait }
+    impl_any_cast! { SomeTrait }
 
     #[derive(Debug)]
     struct Dummy {
@@ -91,13 +93,13 @@ use std::sync::Arc;
     #[derive(Debug)]
     struct Dumber;
 
-    impl SomeTrait for Dummy { }
+    impl SomeTrait for Dummy {}
 
-    impl SomeTrait for Dumber { }
+    impl SomeTrait for Dumber {}
 
     #[test]
     fn test_downcast() {
-        let a: Box<dyn SomeTrait> = Box::new(Dummy{a: 0});
+        let a: Box<dyn SomeTrait> = Box::new(Dummy { a: 0 });
 
         let b = SomeTrait::downcast::<Dumber>(a).unwrap_err();
         let c = SomeTrait::downcast::<Dummy>(b).unwrap();
@@ -107,7 +109,7 @@ use std::sync::Arc;
 
     #[test]
     fn test_downcast_rc() {
-        let a: Arc<dyn SomeTrait> = Arc::new(Dummy{a: 0});
+        let a: Arc<dyn SomeTrait> = Arc::new(Dummy { a: 0 });
 
         let b = SomeTrait::downcast_rc::<Dumber>(a).unwrap_err();
         let c = SomeTrait::downcast_rc::<Dummy>(b).unwrap();
@@ -117,7 +119,7 @@ use std::sync::Arc;
 
     #[test]
     fn test_downcast_ref() {
-        let mut a: Box<dyn SomeTrait> = Box::new(Dummy{a: 0});
+        let mut a: Box<dyn SomeTrait> = Box::new(Dummy { a: 0 });
 
         {
             let r = a.downcast_mut::<Dummy>().unwrap();

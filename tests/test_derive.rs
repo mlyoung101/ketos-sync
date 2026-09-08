@@ -1,5 +1,6 @@
 extern crate ketos;
-#[macro_use] extern crate ketos_derive;
+#[macro_use]
+extern crate ketos_derive;
 
 use std::fmt;
 
@@ -32,34 +33,50 @@ fn test_derive() {
 struct Generic<T: 'static>(T);
 
 impl<T> fmt::Debug for Generic<T> {
-    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result { unimplemented!() }
+    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
+        unimplemented!()
+    }
 }
 
 #[derive(ForeignValue, FromValue, FromValueRef, IntoValue)]
-struct GenericWhere<T>(T) where T: 'static;
+struct GenericWhere<T>(T)
+where
+    T: 'static;
 
 impl<T> fmt::Debug for GenericWhere<T> {
-    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result { unimplemented!() }
+    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
+        unimplemented!()
+    }
 }
 
 #[derive(ForeignValue, FromValueClone, FromValueRef, IntoValue)]
 struct CloneGeneric<T: 'static>(T);
 
 impl<T> Clone for CloneGeneric<T> {
-    fn clone(&self) -> Self { unimplemented!() }
+    fn clone(&self) -> Self {
+        unimplemented!()
+    }
 }
 
 impl<T> fmt::Debug for CloneGeneric<T> {
-    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result { unimplemented!() }
+    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
+        unimplemented!()
+    }
 }
 
 #[derive(ForeignValue, FromValueClone, FromValueRef, IntoValue)]
-struct CloneGenericWhere<T>(T) where T: 'static;
+struct CloneGenericWhere<T>(T)
+where
+    T: 'static;
 
 impl<T> Clone for CloneGenericWhere<T> {
-    fn clone(&self) -> Self { unimplemented!() }
+    fn clone(&self) -> Self {
+        unimplemented!()
+    }
 }
 
 impl<T> fmt::Debug for CloneGenericWhere<T> {
-    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result { unimplemented!() }
+    fn fmt(&self, _: &mut fmt::Formatter) -> fmt::Result {
+        unimplemented!()
+    }
 }

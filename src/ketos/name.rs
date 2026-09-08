@@ -5,8 +5,8 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::iter::FromIterator;
 use std::mem::replace;
-use std::sync::Arc;
 use std::slice;
+use std::sync::Arc;
 
 use crate::function::{SystemFn, SYSTEM_FNS};
 
@@ -98,7 +98,7 @@ macro_rules! standard_names {
 
 // Any addition, deletion, or modification to these constants constitutes
 // a breaking change to the bytecode format.
-standard_names!{
+standard_names! {
     // Names of system functions come first; these are available in global scope.
     // Note that the compiler may still treat some of these specially
     // when possible, e.g. replacing an `=` call with the `Eq` instruction.
@@ -242,8 +242,7 @@ pub const SYSTEM_OPERATORS_BEGIN: u32 = NUM_STANDARD_VALUES;
 pub const SYSTEM_OPERATORS_END: u32 = 90;
 
 /// Number of system operators, beginning at `SYSTEM_OPERATORS_BEGIN`.
-pub const NUM_SYSTEM_OPERATORS: usize =
-    (SYSTEM_OPERATORS_END - SYSTEM_OPERATORS_BEGIN) as usize;
+pub const NUM_SYSTEM_OPERATORS: usize = (SYSTEM_OPERATORS_END - SYSTEM_OPERATORS_BEGIN) as usize;
 
 /// Represents a value which can produce debugging output and may contain
 /// one or more interned `Name` values.
@@ -313,7 +312,7 @@ macro_rules! impl_box {
     }
 }
 
-impl_box!{ Box, Arc }
+impl_box! { Box, Arc }
 
 /// Converts module-local names loaded from bytecode files into global names
 /// in a running interpreter.
@@ -326,7 +325,7 @@ pub struct NameInputConversion {
 impl NameInputConversion {
     /// Creates a new `NameInputConversion` from a local-to-global mapping.
     pub fn new() -> NameInputConversion {
-        NameInputConversion{
+        NameInputConversion {
             map: HashMap::new(),
             next_value: NUM_STANDARD_NAMES,
         }
@@ -351,14 +350,14 @@ pub struct NameOutputConversion<'a> {
     /// Name strings, mapped to local name values
     names: Vec<&'a str>,
     map: HashMap<Name, u32>,
-    store: &'a NameStore
+    store: &'a NameStore,
 }
 
 impl<'a> NameOutputConversion<'a> {
     /// Creates a new `NameOutputConversion`, using the given `NameStore`
     /// to lookup global name values.
-    pub fn new(store: &NameStore) -> NameOutputConversion {
-        NameOutputConversion{
+    pub fn new(store: &NameStore) -> NameOutputConversion<'_> {
+        NameOutputConversion {
             names: Vec::new(),
             map: HashMap::new(),
             store,
@@ -407,9 +406,7 @@ pub struct NameStore {
 impl NameStore {
     /// Constructs an empty `NameStore`.
     pub fn new() -> NameStore {
-        NameStore{
-            names: Vec::new(),
-        }
+        NameStore { names: Vec::new() }
     }
 
     /// Adds a name to the `NameStore` if it is not present.
@@ -428,11 +425,7 @@ impl NameStore {
 
     /// Returns the `Name` value of a given string, if it exists.
     pub fn get_name(&self, name: &str) -> Option<Name> {
-        if let Some(pos) = self.iter().position(|n| n == name) {
-            Some(Name(pos as u32 + NUM_STANDARD_NAMES))
-        } else {
-            None
-        }
+        self.iter().position(|n| n == name).map(|pos| Name(pos as u32 + NUM_STANDARD_NAMES))
     }
 
     /// Returns the string representation of an interned name.
@@ -441,14 +434,17 @@ impl NameStore {
             "<dummy name>"
         } else {
             standard_name(name)
-                .or_else(|| self.names.get((name.0 - NUM_STANDARD_NAMES) as usize)
-                    .map(|s| &s[..]))
+                .or_else(|| {
+                    self.names
+                        .get((name.0 - NUM_STANDARD_NAMES) as usize)
+                        .map(|s| &s[..])
+                })
                 .unwrap_or("<invalid name>")
         }
     }
 
     /// Iterates over all stored names.
-    pub fn iter(&self) -> NameIter {
+    pub fn iter(&self) -> NameIter<'_> {
         NameIter(self.names.iter())
     }
 }
@@ -501,7 +497,7 @@ pub struct NameMap<T> {
 impl<T> NameMap<T> {
     /// Returns a new `NameMap`.
     pub fn new() -> NameMap<T> {
-        NameMap{values: Vec::new()}
+        NameMap { values: Vec::new() }
     }
 
     /// Lowers the map into a `NameMapSlice`, which may not receive new
@@ -517,13 +513,17 @@ impl<T> NameMap<T> {
 
     /// Returns whether the map contains a value for the given name.
     pub fn contains_key(&self, name: Name) -> bool {
-        self.values.binary_search_by(|&(ref n, _)| n.cmp(&name)).is_ok()
+        self.values
+            .binary_search_by(|(n, _)| n.cmp(&name))
+            .is_ok()
     }
 
     /// Returns the value corresponding to the given name.
     pub fn get(&self, name: Name) -> Option<&T> {
-        self.values.binary_search_by(|&(ref n, _)| n.cmp(&name))
-            .ok().map(|pos| &self.values[pos].1)
+        self.values
+            .binary_search_by(|(n, _)| n.cmp(&name))
+            .ok()
+            .map(|pos| &self.values[pos].1)
     }
 
     /// Returns a slice of the contained names and values.
@@ -537,14 +537,14 @@ impl<T> NameMap<T> {
     }
 
     /// Returns an iterator over names and values.
-    pub fn iter(&self) -> slice::Iter<(Name, T)> {
+    pub fn iter(&self) -> slice::Iter<'_, (Name, T)> {
         self.values.iter()
     }
 
     /// Insert a name-value pair into the map.
     /// If a value was already present for the name, it is returned.
     pub fn insert(&mut self, name: Name, value: T) -> Option<T> {
-        match self.values.binary_search_by(|&(ref n, _)| n.cmp(&name)) {
+        match self.values.binary_search_by(|(n, _)| n.cmp(&name)) {
             Ok(pos) => {
                 let old = replace(&mut self.values[pos].1, value);
                 Some(old)
@@ -563,10 +563,13 @@ impl<T> NameMap<T> {
 }
 
 impl<T> FromIterator<(Name, T)> for NameMap<T> {
-    fn from_iter<I>(iterator: I) -> Self where I: IntoIterator<Item=(Name, T)> {
+    fn from_iter<I>(iterator: I) -> Self
+    where
+        I: IntoIterator<Item = (Name, T)>,
+    {
         let mut v = iterator.into_iter().collect::<Vec<_>>();
-        v.sort_by(|a, b| a.0.cmp(&b.0));
-        NameMap{values: v}
+        v.sort_by_key(|a| a.0);
+        NameMap { values: v }
     }
 }
 
@@ -591,7 +594,7 @@ impl<T> NameMapSlice<T> {
     /// Creates a `NameMapSlice` wrapping the given boxed slice,
     /// which must already be sorted by name.
     fn new(values: Box<[(Name, T)]>) -> NameMapSlice<T> {
-        NameMapSlice{ values }
+        NameMapSlice { values }
     }
 
     /// Returns whether the map contains a value for the given name.
@@ -606,8 +609,10 @@ impl<T> NameMapSlice<T> {
 
     /// Returns the value corresponding to the given name.
     pub fn get(&self, name: Name) -> Option<&T> {
-        self.values.binary_search_by(|&(n, _)| n.cmp(&name))
-            .ok().map(|pos| &self.values[pos].1)
+        self.values
+            .binary_search_by(|&(n, _)| n.cmp(&name))
+            .ok()
+            .map(|pos| &self.values[pos].1)
     }
 
     /// Returns a slice of the contained names and values.
@@ -622,7 +627,7 @@ impl<T> NameMapSlice<T> {
     pub fn set(&mut self, name: Name, value: T) -> Option<T> {
         match self.values.binary_search_by(|&(n, _)| n.cmp(&name)) {
             Ok(n) => Some(replace(&mut self.values[n].1, value)),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
@@ -632,13 +637,15 @@ impl<T> NameMapSlice<T> {
     }
 
     /// Returns an iterator over names and values.
-    pub fn iter(&self) -> slice::Iter<(Name, T)> {
+    pub fn iter(&self) -> slice::Iter<'_, (Name, T)> {
         self.values.iter()
     }
 
     /// Elevates the map into `NameMap`, which may receive new key-value pairs.
     pub fn into_name_map(self) -> NameMap<T> {
-        NameMap{values: self.values.into_vec()}
+        NameMap {
+            values: self.values.into_vec(),
+        }
     }
 
     /// Returns the number of name-value pairs contained in the map.
@@ -648,7 +655,10 @@ impl<T> NameMapSlice<T> {
 }
 
 impl<T> FromIterator<(Name, T)> for NameMapSlice<T> {
-    fn from_iter<I>(iterator: I) -> Self where I: IntoIterator<Item=(Name, T)> {
+    fn from_iter<I>(iterator: I) -> Self
+    where
+        I: IntoIterator<Item = (Name, T)>,
+    {
         iterator.into_iter().collect::<NameMap<_>>().into_slice()
     }
 }
@@ -671,7 +681,9 @@ pub struct NameSet {
 impl NameSet {
     /// Returns a new `NameSet`.
     pub fn new() -> NameSet {
-        NameSet{map: NameMap::new()}
+        NameSet {
+            map: NameMap::new(),
+        }
     }
 
     /// Removes all names from the set.
@@ -701,7 +713,7 @@ impl NameSet {
     }
 
     /// Returns an iterator over the set of contained names.
-    pub fn iter(&self) -> SetIter {
+    pub fn iter(&self) -> SetIter<'_> {
         SetIter(self.map.iter())
     }
 
@@ -712,8 +724,13 @@ impl NameSet {
 }
 
 impl FromIterator<Name> for NameSet {
-    fn from_iter<I>(iterator: I) -> Self where I: IntoIterator<Item=Name> {
-        NameSet{map: iterator.into_iter().map(|n| (n, ())).collect()}
+    fn from_iter<I>(iterator: I) -> Self
+    where
+        I: IntoIterator<Item = Name>,
+    {
+        NameSet {
+            map: iterator.into_iter().map(|n| (n, ())).collect(),
+        }
     }
 }
 
@@ -738,7 +755,7 @@ impl NameSetSlice {
     /// Creates a `NameSetSlice` wrapping the given boxed slice,
     /// which must already be sorted.
     fn new(map: NameMapSlice<()>) -> NameSetSlice {
-        NameSetSlice{ map }
+        NameSetSlice { map }
     }
 
     /// Returns whether the set contains the given name.
@@ -748,7 +765,9 @@ impl NameSetSlice {
 
     /// Elevates the set into a `NameSet`, which may receive new name values.
     pub fn into_name_set(self) -> NameSet {
-        NameSet{map: self.map.into_name_map()}
+        NameSet {
+            map: self.map.into_name_map(),
+        }
     }
 
     /// Returns whether the set is empty.
@@ -757,7 +776,7 @@ impl NameSetSlice {
     }
 
     /// Returns an iterator over names in the set.
-    pub fn iter(&self) -> SetIter {
+    pub fn iter(&self) -> SetIter<'_> {
         SetIter(self.map.iter())
     }
 
@@ -768,7 +787,10 @@ impl NameSetSlice {
 }
 
 impl FromIterator<Name> for NameSetSlice {
-    fn from_iter<I>(iterator: I) -> Self where I: IntoIterator<Item=Name> {
+    fn from_iter<I>(iterator: I) -> Self
+    where
+        I: IntoIterator<Item = Name>,
+    {
         iterator.into_iter().collect::<NameSet>().into_slice()
     }
 }

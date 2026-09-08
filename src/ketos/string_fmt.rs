@@ -26,7 +26,7 @@ pub enum FormatError {
     /// Field value exceeded expected range
     FieldOverflow,
     /// Wrong type to field value
-    FieldTypeError{
+    FieldTypeError {
         /// Type of value expected
         expected: &'static str,
         /// Type found
@@ -57,7 +57,7 @@ pub enum FormatError {
     /// End of branch directive found where end of conditional was expected
     ExtraBranch,
     /// Argument value of incorrect type received
-    TypeError{
+    TypeError {
         /// Expected value type
         expected: &'static str,
         /// Type found
@@ -71,7 +71,7 @@ impl FormatError {
     /// Convenience function to return a `TypeError` value when `expected`
     /// type is expected, but some other type of value is found.
     pub fn expected(ty: &'static str, v: &Value) -> FormatError {
-        FormatError::TypeError{
+        FormatError::TypeError {
             expected: ty,
             found: v.type_name(),
         }
@@ -83,11 +83,16 @@ impl fmt::Display for FormatError {
         match *self {
             FormatError::Error(ref s) => f.write_str(s),
             FormatError::ExtraFields => f.write_str("extraneous fields to directive"),
-            FormatError::FieldTypeError{expected, found} =>
-                write!(f, "expected field of type {}; found {}", expected, found),
+            FormatError::FieldTypeError { expected, found } => {
+                write!(f, "expected field of type {}; found {}", expected, found)
+            }
             FormatError::FieldOverflow => f.write_str("integer overflow in field"),
-            FormatError::IncompleteDirective => f.write_str("end of format string reached when parsing directive"),
-            FormatError::IncorrectCloseDelim(ch) => write!(f, "incorrect close delimiter: `{}`", ch),
+            FormatError::IncompleteDirective => {
+                f.write_str("end of format string reached when parsing directive")
+            }
+            FormatError::IncorrectCloseDelim(ch) => {
+                write!(f, "incorrect close delimiter: `{}`", ch)
+            }
             FormatError::IncorrectFlags => f.write_str("incorrect flags to directive"),
             FormatError::InfiniteLoop => f.write_str("infinite loop detected"),
             FormatError::InsufficientArguments => f.write_str("insufficient arguments"),
@@ -98,16 +103,16 @@ impl fmt::Display for FormatError {
             FormatError::MissingCloseDelim(ch) => write!(f, "missing close delimiter `{}`", ch),
             FormatError::MissingBranch => f.write_str("missing branch directive"),
             FormatError::ExtraBranch => f.write_str("extraneous branch directive"),
-            FormatError::TypeError{expected, found} =>
-                write!(f, "expected {}; found {}", expected, found),
+            FormatError::TypeError { expected, found } => {
+                write!(f, "expected {}; found {}", expected, found)
+            }
             FormatError::UnrecognizedDirective(ch) => write!(f, "unrecognized directive `{}`", ch),
         }
     }
 }
 
 /// Constructs a formatted string using given the format `fmt` and input values.
-pub fn format_string(names: &NameStore, fmt: &str, values: &[Value])
-        -> Result<String, ExecError> {
+pub fn format_string(names: &NameStore, fmt: &str, values: &[Value]) -> Result<String, ExecError> {
     let mut buf = String::new();
     let mut fmter = StringFormatter::new(fmt, names, values);
     fmter.format_string(&mut buf)?;
@@ -157,7 +162,7 @@ impl Group {
             '[' => Some(Group::Conditional),
             '{' => Some(Group::Iteration),
             '<' => Some(Group::Justify),
-            _ => None
+            _ => None,
         }
     }
 
@@ -197,14 +202,17 @@ struct FieldParser<'a> {
 }
 
 impl<'a> FieldParser<'a> {
-    fn new(s: &str) -> FieldParser {
-        FieldParser{s, chars: s.char_indices()}
+    fn new(s: &str) -> FieldParser<'_> {
+        FieldParser {
+            s,
+            chars: s.char_indices(),
+        }
     }
 
     fn rest(mut self) -> &'a str {
         match self.chars.next() {
             Some((ind, _)) => &self.s[ind..],
-            None => &self.s[..0]
+            None => &self.s[..0],
         }
     }
 
@@ -231,12 +239,13 @@ impl<'a> FieldParser<'a> {
                 let mut end = start + 1;
                 loop {
                     match self.chars.next() {
-                        Some((_, ch)) if ch.is_digit(10) => end += 1,
+                        Some((_, ch)) if ch.is_ascii_digit() => end += 1,
                         _ => break,
                     }
                 }
 
-                self.s[start..end].parse()
+                self.s[start..end]
+                    .parse()
                     .map(|i| Some(Field::Integer(i)))
                     .map_err(|_| FormatError::FieldOverflow)
             }
@@ -246,9 +255,12 @@ impl<'a> FieldParser<'a> {
 }
 
 impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
-    fn new(s: &'fmt str, names: &'names NameStore, values: &'value [Value])
-            -> StringFormatter<'fmt, 'names, 'value> {
-        StringFormatter{
+    fn new(
+        s: &'fmt str,
+        names: &'names NameStore,
+        values: &'value [Value],
+    ) -> StringFormatter<'fmt, 'names, 'value> {
+        StringFormatter {
             fmt: s,
             full_fmt: s,
             chars: s.char_indices(),
@@ -265,11 +277,10 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         }
     }
 
-    fn sub(&self, s: &'fmt str, values: &'value [Value])
-            -> StringFormatter<'fmt, 'names, 'value> {
-        StringFormatter{
+    fn sub(&self, s: &'fmt str, values: &'value [Value]) -> StringFormatter<'fmt, 'names, 'value> {
+        StringFormatter {
             full_fmt: self.full_fmt,
-            .. StringFormatter::new(s, self.names, values)
+            ..StringFormatter::new(s, self.names, values)
         }
     }
 
@@ -330,27 +341,33 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                             self.end_group(Group::Iteration, dir)?;
                             break;
                         }
-                        '^' => if self.process_terminate(&dir)? {
-                            self.terminate = true;
-                            if dir.colon {
-                                self.terminate_loop = true;
+                        '^' => {
+                            if self.process_terminate(&dir)? {
+                                self.terminate = true;
+                                if dir.colon {
+                                    self.terminate_loop = true;
+                                }
+                                break;
                             }
-                            break;
-                        },
-                        ';' => if self.inside_group(Group::Conditional) {
-                            self.close_dir = Some(dir);
-                            break;
-                        } else if !self.inside_group(Group::Justify) {
-                            return Err(self.error(dir.span,
-                                FormatError::MisplacedDirective));
-                        },
+                        }
+                        ';' => {
+                            if self.inside_group(Group::Conditional) {
+                                self.close_dir = Some(dir);
+                                break;
+                            } else if !self.inside_group(Group::Justify) {
+                                return Err(self.error(dir.span, FormatError::MisplacedDirective));
+                            }
+                        }
                         '|' => self.repeat_char(&dir, buf, '\x0c')?,
                         '%' => self.repeat_char(&dir, buf, '\n')?,
                         '&' => self.fresh_line(&dir, buf)?,
                         '\n' => self.consume_whitespace(),
                         '~' => self.repeat_char(&dir, buf, '~')?,
-                        ch => return Err(self.error(self.span_one(),
-                            FormatError::UnrecognizedDirective(ch)))
+                        ch => {
+                            return Err(
+                                self.error(self.span_one(), FormatError::UnrecognizedDirective(ch))
+                            )
+                        }
                     }
                 }
                 ch => buf.push(ch),
@@ -363,8 +380,9 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     fn check_open_groups(&self) -> Result<(), ExecError> {
         match self.groups.last() {
             None => Ok(()),
-            Some(&(group, span)) => Err(self.error(span,
-                FormatError::MissingCloseDelim(group.close_delim())))
+            Some(&(group, span)) => {
+                Err(self.error(span, FormatError::MissingCloseDelim(group.close_delim())))
+            }
         }
     }
 
@@ -387,8 +405,10 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 self.close_dir = Some(dir);
                 Ok(())
             }
-            _ => Err(self.error(dir.span,
-                FormatError::IncorrectCloseDelim(group.close_delim())))
+            _ => Err(self.error(
+                dir.span,
+                FormatError::IncorrectCloseDelim(group.close_delim()),
+            )),
         }
     }
 
@@ -403,12 +423,14 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                     // Next is any char
                     match self.consume_char() {
                         Some(_) => (),
-                        None => break
+                        None => break,
                     }
                     // Next is nothing or comma
                     match self.peek_char() {
-                        Some(',') => { self.consume_char(); }
-                        _ => break
+                        Some(',') => {
+                            self.consume_char();
+                        }
+                        _ => break,
                     }
                     continue;
                 }
@@ -416,23 +438,25 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 Some('v') | Some('#') => {
                     self.consume_char();
                     match self.peek_char() {
-                        Some(',') => { self.consume_char(); },
-                        _ => break
+                        Some(',') => {
+                            self.consume_char();
+                        }
+                        _ => break,
                     }
                 }
-                Some(ch) if ch == '-' || ch.is_digit(10) => {
+                Some(ch) if ch == '-' || ch.is_ascii_digit() => {
                     self.consume_char();
                     loop {
                         match self.peek_char() {
-                            Some(ch) if ch.is_digit(10) => {
+                            Some(ch) if ch.is_ascii_digit() => {
                                 self.consume_char();
                             }
                             Some(',') => break,
-                            _ => break 'fields
+                            _ => break 'fields,
                         }
                     }
                 }
-                _ => break
+                _ => break,
             }
             self.consume_char();
         }
@@ -447,20 +471,18 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             match self.consume_char() {
                 Some('@') => {
                     if at {
-                        return Err(self.error(self.span_one(),
-                            FormatError::InvalidFlags));
+                        return Err(self.error(self.span_one(), FormatError::InvalidFlags));
                     }
                     at = true;
                 }
                 Some(':') => {
                     if colon {
-                        return Err(self.error(self.span_one(),
-                            FormatError::InvalidFlags));
+                        return Err(self.error(self.span_one(), FormatError::InvalidFlags));
                     }
                     colon = true;
                 }
                 Some(ch) => {
-                    return Ok(Directive{
+                    return Ok(Directive {
                         at,
                         colon,
                         command: ch.to_ascii_lowercase(),
@@ -468,14 +490,14 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                         span: self.span_start(start),
                     })
                 }
-                None => return Err(self.error(self.span_start(start),
-                    FormatError::IncompleteDirective))
+                None => {
+                    return Err(self.error(self.span_start(start), FormatError::IncompleteDirective))
+                }
             }
         }
     }
 
-    fn pretty_print(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn pretty_print(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
         let indent = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(0);
         self.no_fields(fields, dir.span)?;
@@ -487,8 +509,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn format_aesthetic(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_aesthetic(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
         let min_col = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(0);
         let col_inc = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(0);
@@ -503,8 +524,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn format_standard(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_standard(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
         let min_col = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(0);
         let col_inc = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(0);
@@ -518,8 +538,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn format_character(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_character(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         // TODO: ':' flag prints name for special characters, e.g. "Space";
         // '@' flag prints name in literal format, e.g. "#\Space"
         self.no_fields(FieldParser::new(dir.fields), dir.span)?;
@@ -527,7 +546,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
 
         let ch = match *arg {
             Value::Char(ch) => ch,
-            ref v => return Err(self.error(dir.span, FormatError::expected("char", v)))
+            ref v => return Err(self.error(dir.span, FormatError::expected("char", v))),
         };
 
         buf.push(ch);
@@ -537,7 +556,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     fn no_fields(&self, mut fields: FieldParser, span: Span) -> Result<(), ExecError> {
         match fields.next() {
             Ok(None) => Ok(()),
-            _ => Err(self.error(span, FormatError::ExtraFields))
+            _ => Err(self.error(span, FormatError::ExtraFields)),
         }
     }
 
@@ -550,23 +569,27 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             n = n.saturating_sub(1);
         }
 
-        buf.extend(repeat('\n').take(n as usize));
+        buf.extend(std::iter::repeat_n('\n', n as usize));
         Ok(())
     }
 
-    fn repeat_char(&mut self, dir: &Directive, buf: &mut String, ch: char) -> Result<(), ExecError> {
+    fn repeat_char(
+        &mut self,
+        dir: &Directive,
+        buf: &mut String,
+        ch: char,
+    ) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
 
         let n = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(1);
         self.no_fields(fields, dir.span)?;
 
-        buf.extend(repeat(ch).take(n as usize));
+        buf.extend(std::iter::repeat_n(ch, n as usize));
 
         Ok(())
     }
 
-    fn format_plural(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_plural(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         self.no_fields(FieldParser::new(dir.fields), dir.span)?;
 
         if dir.colon {
@@ -578,8 +601,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             Value::Float(f) => f == 1.0,
             Value::Integer(ref i) => i == &Integer::one(),
             Value::Ratio(ref r) => r.numer() == r.denom(),
-            ref v => return Err(self.error(dir.span,
-                FormatError::expected("number", v)))
+            ref v => return Err(self.error(dir.span, FormatError::expected("number", v))),
         };
 
         match (dir.at, is_one) {
@@ -599,14 +621,14 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         let col_inc = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(1);
         self.no_fields(fields, dir.span)?;
 
-        let cur_col = cur_line_len(&buf) as u32;
+        let cur_col = cur_line_len(buf) as u32;
 
         if !dir.at {
             if cur_col < col_num {
-                buf.extend(repeat(' ').take((col_num - cur_col) as usize));
+                buf.extend(std::iter::repeat_n(' ', (col_num - cur_col) as usize));
             } else if col_inc != 0 {
                 let n = col_inc - (cur_col % col_inc);
-                buf.extend(repeat(' ').take(n as usize));
+                buf.extend(std::iter::repeat_n(' ', n as usize));
             }
         } else {
             let n = if col_inc > 1 {
@@ -614,14 +636,13 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             } else {
                 col_num
             };
-            buf.extend(repeat(' ').take(n as usize));
+            buf.extend(std::iter::repeat_n(' ', n as usize));
         }
 
         Ok(())
     }
 
-    fn format_float(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_float(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
         let width = self.get_u32_field(&mut fields, dir.span)?;
         let prec = self.get_u32_field(&mut fields, dir.span)?;
@@ -634,14 +655,14 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         // This is horrible and hacky because there's no way I'm implementing
         // float formatting myself. Deal with it.
         let s = match (dir.at, width, prec) {
-            (false, None,    None   ) => format!("{}",        f),
-            (false, Some(w), None   ) => format!("{:1$}",     f, w as usize),
-            (false, None,    Some(p)) => format!("{:.1$}",    f,             p as usize),
-            (false, Some(w), Some(p)) => format!("{:1$.2$}",  f, w as usize, p as usize),
-            (true,  None,    None   ) => format!("{:+}",      f),
-            (true,  Some(w), None   ) => format!("{:+1$}",    f, w as usize),
-            (true,  None,    Some(p)) => format!("{:+.1$}",   f,             p as usize),
-            (true,  Some(w), Some(p)) => format!("{:+1$.2$}", f, w as usize, p as usize),
+            (false, None, None) => format!("{}", f),
+            (false, Some(w), None) => format!("{:1$}", f, w as usize),
+            (false, None, Some(p)) => format!("{:.1$}", f, p as usize),
+            (false, Some(w), Some(p)) => format!("{:1$.2$}", f, w as usize, p as usize),
+            (true, None, None) => format!("{:+}", f),
+            (true, Some(w), None) => format!("{:+1$}", f, w as usize),
+            (true, None, Some(p)) => format!("{:+.1$}", f, p as usize),
+            (true, Some(w), Some(p)) => format!("{:+1$.2$}", f, w as usize, p as usize),
         };
 
         if pad_char != ' ' {
@@ -653,8 +674,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn format_exponent(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_exponent(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
         let width = self.get_u32_field(&mut fields, dir.span)?;
         let prec = self.get_u32_field(&mut fields, dir.span)?;
@@ -667,14 +687,14 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         // This is horrible and hacky because there's no way I'm implementing
         // float formatting myself. Deal with it.
         let s = match (dir.at, width, prec) {
-            (false, None,    None   ) => format!("{:e}",       f),
-            (false, Some(w), None   ) => format!("{:1$e}",     f, w as usize),
-            (false, None,    Some(p)) => format!("{:.1$e}",    f,             p as usize),
-            (false, Some(w), Some(p)) => format!("{:1$.2$e}",  f, w as usize, p as usize),
-            (true,  None,    None   ) => format!("{:+e}",      f),
-            (true,  Some(w), None   ) => format!("{:+1$e}",    f, w as usize),
-            (true,  None,    Some(p)) => format!("{:+.1$e}",   f,             p as usize),
-            (true,  Some(w), Some(p)) => format!("{:+1$.2$e}", f, w as usize, p as usize),
+            (false, None, None) => format!("{:e}", f),
+            (false, Some(w), None) => format!("{:1$e}", f, w as usize),
+            (false, None, Some(p)) => format!("{:.1$e}", f, p as usize),
+            (false, Some(w), Some(p)) => format!("{:1$.2$e}", f, w as usize, p as usize),
+            (true, None, None) => format!("{:+e}", f),
+            (true, Some(w), None) => format!("{:+1$e}", f, w as usize),
+            (true, None, Some(p)) => format!("{:+.1$e}", f, p as usize),
+            (true, Some(w), Some(p)) => format!("{:+1$.2$e}", f, w as usize, p as usize),
         };
 
         if pad_char != ' ' {
@@ -686,17 +706,19 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn format_radix(&mut self, dir: &Directive, buf: &mut String)
-            -> Result<(), ExecError> {
+    fn format_radix(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
 
         match self.get_u32_field(&mut fields, dir.span)? {
-            Some(n) if n >= 2 && n <= 36 => {
-                let new_dir = Directive{fields: fields.rest(), ..*dir};
+            Some(n) if (2..=36).contains(&n) => {
+                let new_dir = Directive {
+                    fields: fields.rest(),
+                    ..*dir
+                };
                 return self.format_integer(&new_dir, buf, n);
             }
             Some(n) => return Err(self.error(dir.span, FormatError::InvalidRadix(n))),
-            None => ()
+            None => (),
         }
 
         let arg = self.consume_arg(dir.span)?;
@@ -705,25 +727,37 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         let n = match (dir.at, i.to_u32()) {
             (false, Some(n)) if n <= 5000 => n,
             (true, Some(n)) if n > 0 && n <= 5000 => n,
-            (false, _) => return Err(self.error(dir.span,
-                FormatError::Error(format!(
-                    "Expected an integer 0 - 5000; found {}", i)
-                        .into_boxed_str()))),
-            (true, _) => return Err(self.error(dir.span,
-                FormatError::Error(format!(
-                    "Expected an integer 1 - 5000; found {}", i)
-                        .into_boxed_str())))
+            (false, _) => {
+                return Err(self.error(
+                    dir.span,
+                    FormatError::Error(
+                        format!("Expected an integer 0 - 5000; found {}", i).into_boxed_str(),
+                    ),
+                ))
+            }
+            (true, _) => {
+                return Err(self.error(
+                    dir.span,
+                    FormatError::Error(
+                        format!("Expected an integer 1 - 5000; found {}", i).into_boxed_str(),
+                    ),
+                ))
+            }
         };
 
         match (dir.at, dir.colon) {
             (false, false) => self.format_cardinal(n, buf),
             (false, true) => self.format_ordinal(n, buf),
-            (true, colon) => self.format_roman_numeral(n, buf, colon)
+            (true, colon) => self.format_roman_numeral(n, buf, colon),
         }
     }
 
-    fn format_integer(&mut self, dir: &Directive, buf: &mut String,
-            radix: u32) -> Result<(), ExecError> {
+    fn format_integer(
+        &mut self,
+        dir: &Directive,
+        buf: &mut String,
+        radix: u32,
+    ) -> Result<(), ExecError> {
         let mut fields = FieldParser::new(dir.fields);
         let min_col = self.get_u32_field(&mut fields, dir.span)?.unwrap_or(0);
         let pad_char = self.get_char_field(&mut fields, dir.span)?.unwrap_or(' ');
@@ -761,7 +795,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 self.end_index = ind + ch.len_utf8();
                 Some(ch)
             }
-            None => None
+            None => None,
         }
     }
 
@@ -776,10 +810,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     }
 
     fn peek_char(&mut self) -> Option<char> {
-        match self.chars.clone().next() {
-            Some((_, ch)) => Some(ch),
-            None => None
-        }
+        self.chars.clone().next().map(|(_, ch)| ch)
     }
 
     fn arguments_empty(&self) -> bool {
@@ -803,11 +834,15 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     fn inside_group(&self, group: Group) -> bool {
         match self.groups.last() {
             Some(&(grp, _)) => grp == group,
-            _ => false
+            _ => false,
         }
     }
 
-    fn process_case_conversion(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
+    fn process_case_conversion(
+        &mut self,
+        dir: &Directive,
+        buf: &mut String,
+    ) -> Result<(), ExecError> {
         self.no_fields(FieldParser::new(dir.fields), dir.span)?;
         self.push_group(Group::CaseConversion, dir.span);
         let start = buf.len();
@@ -824,7 +859,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 (false, false) => make_lowercase(buf, start),
                 (true, false) => make_first_uppercase(buf, start),
                 (false, true) => make_title_case(buf, start),
-                (true, true) => make_uppercase(buf, start)
+                (true, true) => make_uppercase(buf, start),
             }
         }
 
@@ -836,8 +871,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         let mut found_end = false;
 
         match (dir.at, dir.colon) {
-            (true, true) => return Err(self.error(dir.span,
-                FormatError::IncorrectFlags)),
+            (true, true) => return Err(self.error(dir.span, FormatError::IncorrectFlags)),
             (false, false) => {
                 // No-flag conditional; argument is an integer referring to
                 // the desired branch to evaluate.
@@ -846,33 +880,37 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                     let i = self.get_integer(arg, dir.span)?;
                     let n = match i.to_u32() {
                         Some(n) => n,
-                        None => u32::max_value()
+                        None => u32::max_value(),
                     };
 
                     // Skip to the branch we're looking for
                     for _ in 0..n {
-                        let dir = self.skip_until(
-                            |dir| dir.command == ';' || dir.command == ']')?;
+                        let dir =
+                            self.skip_until(|dir| dir.command == ';' || dir.command == ']')?;
 
                         match dir {
                             // End branch. Break out.
-                            Directive{command: ']', ..} => {
+                            Directive { command: ']', .. } => {
                                 found_end = true;
                                 break;
                             }
                             // Else branch. Unconditionally evaluate.
-                            Directive{command: ';', colon: true, ..} => {
+                            Directive {
+                                command: ';',
+                                colon: true,
+                                ..
+                            } => {
                                 break;
                             }
-                            _ => ()
+                            _ => (),
                         }
                     }
 
                     if !found_end {
                         self.format_string(buf)?;
 
-                        if let Some(Directive{command: ']', ..}) = self.close_dir.take() {
-                             found_end = true;
+                        if let Some(Directive { command: ']', .. }) = self.close_dir.take() {
+                            found_end = true;
                         }
                     }
                 }
@@ -884,8 +922,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 let v = self.get_bool(arg, dir.span)?;
 
                 if v {
-                    let dir = self.skip_until(
-                        |dir| dir.command == ';' || dir.command == ']')?;
+                    let dir = self.skip_until(|dir| dir.command == ';' || dir.command == ']')?;
 
                     if dir.command == ']' {
                         return Err(self.error(dir.span, FormatError::MissingBranch));
@@ -895,11 +932,12 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 self.format_string(buf)?;
 
                 match self.close_dir.take() {
-                    Some(Directive{command: ']', ..}) => found_end = true,
-                    Some(Directive{command: ';', ..}) => if v {
-                        return Err(self.error(dir.span, FormatError::ExtraBranch))
-                    },
-                    _ => ()
+                    Some(Directive { command: ']', .. }) => found_end = true,
+                    Some(Directive { command: ';', .. })
+                        if v => {
+                            return Err(self.error(dir.span, FormatError::ExtraBranch));
+                        }
+                    _ => (),
                 }
             }
             (true, false) => {
@@ -915,11 +953,11 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                     self.format_string(buf)?;
 
                     match self.close_dir.take() {
-                        Some(Directive{command: ']', ..}) => found_end = true,
-                        Some(Directive{command: ';', ..}) =>
-                            return Err(self.error(dir.span,
-                                FormatError::ExtraBranch)),
-                        _ => ()
+                        Some(Directive { command: ']', .. }) => found_end = true,
+                        Some(Directive { command: ';', .. }) => {
+                            return Err(self.error(dir.span, FormatError::ExtraBranch))
+                        }
+                        _ => (),
                     }
                 }
             }
@@ -934,7 +972,11 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn process_justification(&mut self, dir: &Directive, buf: &mut String) -> Result<(), ExecError> {
+    fn process_justification(
+        &mut self,
+        dir: &Directive,
+        buf: &mut String,
+    ) -> Result<(), ExecError> {
         self.push_group(Group::Justify, dir.span);
         let mut line_len = 72;
         let mut pre = None;
@@ -950,14 +992,17 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         loop {
             let seg_start = self.end_index;
 
-            let end_dir = self.skip_until(
-                |dir| dir.command == ';' || dir.command == '>')?;
+            let end_dir = self.skip_until(|dir| dir.command == ';' || dir.command == '>')?;
 
             // Special `~:;` directive must be the first.
-            if let Directive{command: ';', colon: true, ..} = end_dir {
+            if let Directive {
+                command: ';',
+                colon: true,
+                ..
+            } = end_dir
+            {
                 if !strs.is_empty() {
-                    return Err(self.error(end_dir.span,
-                        FormatError::MisplacedDirective));
+                    return Err(self.error(end_dir.span, FormatError::MisplacedDirective));
                 }
             }
 
@@ -974,12 +1019,16 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             }
             sub_fmter.finish()?;
 
-            if let Directive{command: ';', colon: true, ..} = end_dir {
+            if let Directive {
+                command: ';',
+                colon: true,
+                ..
+            } = end_dir
+            {
                 pre = Some(s);
 
                 let mut fields = FieldParser::new(end_dir.fields);
-                let spare = self.get_u32_field(&mut fields, end_dir.span)?
-                    .unwrap_or(0);
+                let spare = self.get_u32_field(&mut fields, end_dir.span)?.unwrap_or(0);
                 if let Some(len) = self.get_u32_field(&mut fields, end_dir.span)? {
                     line_len = len.saturating_sub(spare);
                 }
@@ -994,7 +1043,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         }
 
         if strs.is_empty() {
-            buf.extend(repeat(pad_char).take(min_col as usize));
+            buf.extend(std::iter::repeat_n(pad_char, min_col as usize));
         } else {
             // Number of padding spans
             let mut pads = match strs.len() as u32 - 1 + (dir.at as u32) + (dir.colon as u32) {
@@ -1021,7 +1070,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 };
 
                 pads -= 1;
-                temp.extend(repeat(pad_char).take(pad as usize));
+                temp.extend(std::iter::repeat_n(pad_char, pad as usize));
             }
 
             for s in &strs {
@@ -1035,12 +1084,12 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                         base_pad + 1
                     };
 
-                    temp.extend(repeat(pad_char).take(pad as usize));
+                    temp.extend(std::iter::repeat_n(pad_char, pad as usize));
                 }
             }
 
             if let Some(pre) = pre {
-                if cur_line_len(&buf) + temp.len() > line_len as usize {
+                if cur_line_len(buf) + temp.len() > line_len as usize {
                     buf.push_str(&pre);
                 }
             }
@@ -1059,14 +1108,16 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         self.no_fields(fields, dir.span)?;
 
         Ok(match (a, b, c) {
-            (None,    _,       _) => if dir.colon {
-                self.parent_end
-            } else {
-                self.arguments_empty()
-            },
-            (Some(a), None,    _) => a == 0,
+            (None, _, _) => {
+                if dir.colon {
+                    self.parent_end
+                } else {
+                    self.arguments_empty()
+                }
+            }
+            (Some(a), None, _) => a == 0,
             (Some(a), Some(b), None) => a == b,
-            (Some(a), Some(b), Some(c)) => a <= b && b <= c
+            (Some(a), Some(b), Some(c)) => a <= b && b <= c,
         })
     }
 
@@ -1080,7 +1131,9 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     /// the error result of `check_open_groups` will be returned.
     /// If `check_open_groups` does not return an error, it will panic.
     fn skip_until<F>(&mut self, mut f: F) -> Result<Directive<'fmt>, ExecError>
-            where F: FnMut(&Directive) -> bool {
+    where
+        F: FnMut(&Directive) -> bool,
+    {
         let mut groups = Vec::new();
 
         loop {
@@ -1099,12 +1152,13 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                             let (ch, span) = groups.pop().unwrap();
 
                             if ch != dir.command {
-                                return Err(self.error(span,
-                                    FormatError::IncorrectCloseDelim(dir.command)));
+                                return Err(
+                                    self.error(span, FormatError::IncorrectCloseDelim(dir.command))
+                                );
                             }
                             continue;
                         }
-                        _ => ()
+                        _ => (),
                     }
 
                     if groups.is_empty() && f(&dir) {
@@ -1117,8 +1171,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         }
 
         if let Some((ch, span)) = groups.pop() {
-            return Err(self.error(span,
-                FormatError::MissingCloseDelim(ch)));
+            return Err(self.error(span, FormatError::MissingCloseDelim(ch)));
         }
 
         self.check_open_groups()?;
@@ -1180,7 +1233,8 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         self.push_group(Group::Iteration, dir.span);
 
         let mut fields = FieldParser::new(dir.fields);
-        let mut max_iter = self.get_u32_field(&mut fields, dir.span)?
+        let mut max_iter = self
+            .get_u32_field(&mut fields, dir.span)?
             .unwrap_or(u32::max_value());
         self.no_fields(fields, dir.span)?;
 
@@ -1192,7 +1246,7 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 let arg = self.consume_arg(dir.span)?;
                 self.get_string(arg, dir.span)?
             }
-            fmt => fmt
+            fmt => fmt,
         };
 
         // Whether to run sub_fmt at least once
@@ -1431,8 +1485,12 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
         Ok(())
     }
 
-    fn format_roman_numeral(&mut self, mut n: u32, buf: &mut String, old: bool)
-            -> Result<(), ExecError> {
+    fn format_roman_numeral(
+        &mut self,
+        mut n: u32,
+        buf: &mut String,
+        old: bool,
+    ) -> Result<(), ExecError> {
         while n > 0 {
             match get_roman_digit(n, old) {
                 Roman::One(ch, value) => {
@@ -1453,9 +1511,12 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     fn error(&self, span: Span, err: FormatError) -> ExecError {
         let off = substr_offset(self.fmt, self.full_fmt) as BytePos;
 
-        ExecError::FormatError{
+        ExecError::FormatError {
             fmt: self.full_fmt.to_owned().into_boxed_str(),
-            span: Span{lo: span.lo + off, hi: span.hi + off},
+            span: Span {
+                lo: span.lo + off,
+                hi: span.hi + off,
+            },
             err,
         }
     }
@@ -1463,12 +1524,15 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
     fn get_bool(&self, v: &Value, span: Span) -> Result<bool, ExecError> {
         match *v {
             Value::Bool(r) => Ok(r),
-            ref v => Err(self.error(span, FormatError::expected("bool", v)))
+            ref v => Err(self.error(span, FormatError::expected("bool", v))),
         }
     }
 
-    fn get_char_field(&mut self, fields: &mut FieldParser, span: Span)
-            -> Result<Option<char>, ExecError> {
+    fn get_char_field(
+        &mut self,
+        fields: &mut FieldParser,
+        span: Span,
+    ) -> Result<Option<char>, ExecError> {
         let r = fields.next().map_err(|e| self.error(span, e));
 
         match r? {
@@ -1479,20 +1543,24 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
                 let arg = self.consume_arg(span)?;
                 match *arg {
                     Value::Char(ch) => Ok(Some(ch)),
-                    ref v => Err(self.error(span,
-                        FormatError::expected("char", v)))
+                    ref v => Err(self.error(span, FormatError::expected("char", v))),
                 }
             }
-            Some(Field::ArgCount) | Some(Field::Integer(_)) =>
-                Err(self.error(span, FormatError::FieldTypeError{
+            Some(Field::ArgCount) | Some(Field::Integer(_)) => Err(self.error(
+                span,
+                FormatError::FieldTypeError {
                     expected: "char",
                     found: "integer",
-                })),
+                },
+            )),
         }
     }
 
-    fn get_u32_field(&mut self, fields: &mut FieldParser, span: Span)
-            -> Result<Option<u32>, ExecError> {
+    fn get_u32_field(
+        &mut self,
+        fields: &mut FieldParser,
+        span: Span,
+    ) -> Result<Option<u32>, ExecError> {
         let r = fields.next().map_err(|e| self.error(span, e));
 
         match r? {
@@ -1500,21 +1568,23 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             Some(Field::Empty) => Ok(None),
             Some(Field::Integer(i)) => match i.to_u32() {
                 Some(u) if u <= 100 => Ok(Some(u)),
-                _ => Err(self.error(span, FormatError::FieldOverflow))
+                _ => Err(self.error(span, FormatError::FieldOverflow)),
             },
             Some(Field::ArgCount) => Ok(Some(self.args_left() as u32)),
             Some(Field::ArgValue) => {
                 let arg = self.consume_arg(span)?;
                 match self.get_integer(arg, span)?.to_u32() {
                     Some(u) if u <= 100 => Ok(Some(u)),
-                    _ => Err(self.error(span, FormatError::FieldOverflow))
+                    _ => Err(self.error(span, FormatError::FieldOverflow)),
                 }
             }
-            Some(Field::Char(_)) => Err(self.error(span,
-                FormatError::FieldTypeError{
+            Some(Field::Char(_)) => Err(self.error(
+                span,
+                FormatError::FieldTypeError {
                     expected: "integer",
                     found: "char",
-                })),
+                },
+            )),
         }
     }
 
@@ -1524,52 +1594,55 @@ impl<'fmt, 'names, 'value> StringFormatter<'fmt, 'names, 'value> {
             Value::Integer(ref i) => match i.to_f64() {
                 Some(f) => Ok(f),
                 None if i.is_negative() => Ok(-f64::INFINITY),
-                None => Ok(f64::INFINITY)
+                None => Ok(f64::INFINITY),
             },
             Value::Ratio(ref r) => match r.to_f64() {
                 Some(f) => Ok(f),
                 None if r.is_negative() => Ok(-f64::INFINITY),
-                None => Ok(f64::INFINITY)
+                None => Ok(f64::INFINITY),
             },
-            ref v => Err(self.error(span, FormatError::expected("float", v)))
+            ref v => Err(self.error(span, FormatError::expected("float", v))),
         }
     }
 
-    fn get_integer<'a>(&self, v: &'a Value, span: Span)
-            -> Result<Cow<'a, Integer>, ExecError> {
+    fn get_integer<'a>(&self, v: &'a Value, span: Span) -> Result<Cow<'a, Integer>, ExecError> {
         match *v {
             Value::Float(f) => Integer::from_f64(f)
                 .map(Owned)
                 .ok_or_else(|| self.error(span, FormatError::IntegerOverflow)),
             Value::Integer(ref i) => Ok(Borrowed(i)),
             Value::Ratio(ref r) => Ok(Owned(r.to_integer())),
-            ref v => Err(self.error(span, FormatError::expected("integer", v)))
+            ref v => Err(self.error(span, FormatError::expected("integer", v))),
         }
     }
 
-    fn get_list<'a>(&self, v: &'a Value, span: Span)
-            -> Result<&'a [Value], ExecError> {
+    fn get_list<'a>(&self, v: &'a Value, span: Span) -> Result<&'a [Value], ExecError> {
         match *v {
             Value::Unit => Ok(&[][..]),
             Value::List(ref li) => Ok(li),
-            ref v => Err(self.error(span, FormatError::expected("list", v)))
+            ref v => Err(self.error(span, FormatError::expected("list", v))),
         }
     }
 
-    fn get_string<'a>(&self, v: &'a Value, span: Span)
-            -> Result<&'a str, ExecError> {
+    fn get_string<'a>(&self, v: &'a Value, span: Span) -> Result<&'a str, ExecError> {
         match *v {
             Value::String(ref s) => Ok(s),
-            ref v => Err(self.error(span, FormatError::expected("string", v)))
+            ref v => Err(self.error(span, FormatError::expected("string", v))),
         }
     }
 
     fn span_one(&self) -> Span {
-        Span{lo: self.last_index as BytePos, hi: self.end_index as BytePos}
+        Span {
+            lo: self.last_index as BytePos,
+            hi: self.end_index as BytePos,
+        }
     }
 
     fn span_start(&self, start: usize) -> Span {
-        Span{lo: start as BytePos, hi: self.end_index as BytePos}
+        Span {
+            lo: start as BytePos,
+            hi: self.end_index as BytePos,
+        }
     }
 }
 
@@ -1586,8 +1659,15 @@ fn substr_offset(child: &str, parent: &str) -> usize {
     child.as_ptr() as usize - parent.as_ptr() as usize
 }
 
-fn pad_str(buf: &mut String, s: &str, min_col: u32, col_inc: u32,
-        min_pad: u32, pad_char: char, left: bool) {
+fn pad_str(
+    buf: &mut String,
+    s: &str,
+    min_col: u32,
+    col_inc: u32,
+    min_pad: u32,
+    pad_char: char,
+    left: bool,
+) {
     if min_col == 0 && min_pad == 0 {
         buf.push_str(s);
     } else {
@@ -1601,11 +1681,11 @@ fn pad_str(buf: &mut String, s: &str, min_col: u32, col_inc: u32,
         };
 
         if left {
-            buf.extend(repeat(pad_char).take(n as usize));
-            buf.push_str(&s);
+            buf.extend(std::iter::repeat_n(pad_char, n as usize));
+            buf.push_str(s);
         } else {
-            buf.push_str(&s);
-            buf.extend(repeat(pad_char).take(n as usize));
+            buf.push_str(s);
+            buf.extend(std::iter::repeat_n(pad_char, n as usize));
         }
     }
 }
@@ -1634,7 +1714,7 @@ fn make_title_case(s: &mut String, mut start: usize) {
     loop {
         let (off, len) = match s[start..].split_whitespace().next() {
             Some(word) => (slice_offset(s, word), word.len()),
-            None => break
+            None => break,
         };
 
         make_first_uppercase(s, off);
@@ -1647,10 +1727,12 @@ fn slice_offset(a: &str, b: &str) -> usize {
 }
 
 fn make_first_uppercase(s: &mut String, start: usize) {
-    let (ind, ch) = match s[start..].char_indices()
-            .find(|&(_, ch)| !ch.is_whitespace()) {
+    let (ind, ch) = match s[start..]
+        .char_indices()
+        .find(|&(_, ch)| !ch.is_whitespace())
+    {
         Some((ind, ch)) => (ind + start, ch),
-        None => return
+        None => return,
     };
 
     if ch.is_ascii() {
@@ -1675,31 +1757,31 @@ enum Roman {
 fn get_roman_digit(n: u32, old: bool) -> Roman {
     if old {
         match n {
-            n if n >= 1000  => Roman::One('M', 1000),
-            500 ..= 999     => Roman::One('D', 500),
-            100 ..= 499     => Roman::One('C', 100),
-            50 ..= 99       => Roman::One('L', 50),
-            10 ..= 49       => Roman::One('X', 10),
-            5 ..= 9         => Roman::One('V', 5),
-            1 ..= 4         => Roman::One('I', 1),
-            _               => panic!("no roman numeral zero")
+            n if n >= 1000 => Roman::One('M', 1000),
+            500..=999 => Roman::One('D', 500),
+            100..=499 => Roman::One('C', 100),
+            50..=99 => Roman::One('L', 50),
+            10..=49 => Roman::One('X', 10),
+            5..=9 => Roman::One('V', 5),
+            1..=4 => Roman::One('I', 1),
+            _ => panic!("no roman numeral zero"),
         }
     } else {
         match n {
-            n if n >= 1000  => Roman::One(     'M', 1000),
-            900 ..= 999     => Roman::Two('C', 'M', 900),
-            500 ..= 899     => Roman::One(     'D', 500),
-            400 ..= 499     => Roman::Two('C', 'D', 400),
-            100 ..= 399     => Roman::One(     'C', 100),
-            90 ..= 99       => Roman::Two('X', 'C', 90),
-            50 ..= 89       => Roman::One(     'L', 50),
-            40 ..= 49       => Roman::Two('X', 'L', 40),
-            10 ..= 39       => Roman::One(     'X', 10),
-            9               => Roman::Two('I', 'X', 9),
-            5 ..= 8         => Roman::One(     'V', 5),
-            4               => Roman::Two('I', 'V', 4),
-            1 ..= 3         => Roman::One(     'I', 1),
-            _               => panic!("no roman numeral zero")
+            n if n >= 1000 => Roman::One('M', 1000),
+            900..=999 => Roman::Two('C', 'M', 900),
+            500..=899 => Roman::One('D', 500),
+            400..=499 => Roman::Two('C', 'D', 400),
+            100..=399 => Roman::One('C', 100),
+            90..=99 => Roman::Two('X', 'C', 90),
+            50..=89 => Roman::One('L', 50),
+            40..=49 => Roman::Two('X', 'L', 40),
+            10..=39 => Roman::One('X', 10),
+            9 => Roman::Two('I', 'X', 9),
+            5..=8 => Roman::One('V', 5),
+            4 => Roman::Two('I', 'V', 4),
+            1..=3 => Roman::One('I', 1),
+            _ => panic!("no roman numeral zero"),
         }
     }
 }
