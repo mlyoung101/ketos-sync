@@ -5,7 +5,6 @@ use std::fs::{File, Metadata};
 use std::io::{stderr, Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::sync::Arc;
 
 use crate::bytecode::Code;
 use crate::compile::{compile, CompileError};

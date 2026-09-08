@@ -7,7 +7,6 @@ use std::iter::FromIterator;
 use std::mem::replace;
 use std::sync::Arc;
 use std::slice;
-use std::sync::Arc;
 
 use crate::function::{SystemFn, SYSTEM_FNS};
 
@@ -314,7 +313,7 @@ macro_rules! impl_box {
     }
 }
 
-impl_box!{ Box, Rc, Arc }
+impl_box!{ Box, Arc }
 
 /// Converts module-local names loaded from bytecode files into global names
 /// in a running interpreter.

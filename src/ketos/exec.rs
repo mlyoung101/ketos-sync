@@ -28,7 +28,6 @@ use std::error::Error as StdError;
 use std::fmt;
 use std::mem::replace;
 use std::sync::Arc;
-use std::sync::Arc;
 use std::time::Instant;
 use std::vec::Drain;
 
@@ -973,7 +972,7 @@ impl Machine {
     fn call_self(&mut self, frame: &mut StackFrame, n: u32) -> Result<(), Error> {
         let lambda = Lambda{
             code: frame.code.clone(),
-            scope: Rc::downgrade(&frame.scope),
+            scope: Arc::downgrade(&frame.scope),
             values: frame.values.clone(),
         };
 

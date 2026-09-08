@@ -2,8 +2,7 @@
 
 use std::any::TypeId;
 use std::cell::{Ref, RefMut, RefCell};
-use std::rc::{Rc, Weak};
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
 use crate::function::{Function, Lambda};
 use crate::io::GlobalIo;

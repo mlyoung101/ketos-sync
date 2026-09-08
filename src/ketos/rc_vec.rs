@@ -8,7 +8,6 @@ use std::ops;
 use std::path::Path;
 use std::sync::Arc;
 use std::slice::Iter;
-use std::sync::Arc;
 
 // A duplicate of `collections::range::RangeArgument`, which is unstable.
 /// Argument for functions accepting a range

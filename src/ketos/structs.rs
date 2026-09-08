@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::fmt;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use std::sync::Arc;
 
 use crate::error::Error;
 use crate::exec::ExecError;
